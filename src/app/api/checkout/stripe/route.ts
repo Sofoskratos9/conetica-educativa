@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from '@/lib/supabase';
 
 // Initialize Stripe
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-    apiVersion: '2025-11-17.clover',
+    apiVersion: '2023-10-16',
 });
 
 // Validation schema
