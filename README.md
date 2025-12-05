@@ -6,12 +6,15 @@ Plataforma SaaS educativa profesional con pagos reales, base de datos y segurida
 
 ### 1. Subir a GitHub
 
+✅ **Ya completado!** El repositorio está en:
+**<https://github.com/Sofoskratos9/conetica-educativa>**
+
+Para futuros cambios:
+
 ```bash
-git init
 git add .
-git commit -m "Initial commit"
-git remote add origin https://github.com/TU_USUARIO/conetica-educativa.git
-git push -u origin main
+git commit -m "Descripción de cambios"
+git push
 ```
 
 ### 2. Desplegar en Vercel
