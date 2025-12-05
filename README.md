@@ -1,36 +1,96 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Conética Educativa™
 
-## Getting Started
+Plataforma SaaS educativa profesional con pagos reales, base de datos y seguridad de producción.
 
-First, run the development server:
+## 🚀 Despliegue Rápido
+
+### 1. Subir a GitHub
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin https://github.com/TU_USUARIO/conetica-educativa.git
+git push -u origin main
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Desplegar en Vercel
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Ve a <https://vercel.com/new>
+2. Importa tu repositorio
+3. Deploy (compilará con valores dummy)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Agregar Variables de Entorno
 
-## Learn More
+En Vercel Dashboard → Settings → Environment Variables:
 
-To learn more about Next.js, take a look at the following resources:
+```
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+STRIPE_SECRET_KEY
+STRIPE_WEBHOOK_SECRET
+MERCADOPAGO_ACCESS_TOKEN
+MERCADOPAGO_PUBLIC_KEY
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_APP_URL
+NEXTAUTH_SECRET
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Ver `.env.example` para detalles.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 4. Redeploy
 
-## Deploy on Vercel
+Después de agregar variables: Deployments → Redeploy
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📋 Configuración Completa
+
+Ver documentación detallada:
+
+- `VERCEL_DEPLOY.md` - Guía de despliegue
+- `PAYMENT_SETUP.md` - Configurar Stripe y Mercado Pago
+- `SECURITY.md` - Medidas de seguridad
+- `supabase/schema.sql` - Ejecutar en Supabase
+
+---
+
+## 🏗️ Estructura
+
+```
+src/
+├── app/
+│   ├── api/              ← API Routes (checkout, webhooks)
+│   ├── auth/             ← Login, Register
+│   ├── dashboard/        ← Dashboard estudiante
+│   └── page.tsx          ← Landing page
+├── lib/
+│   ├── supabase.ts       ← Cliente DB
+│   ├── access-control.ts ← Control de acceso
+│   └── security/         ← Sanitización y autorización
+└── middleware.ts         ← Protección de rutas
+```
+
+---
+
+## ✅ Características
+
+- ✅ Pagos reales (Stripe + Mercado Pago)
+- ✅ Base de datos Supabase
+- ✅ Seguridad completa (RLS, sanitización, roles)
+- ✅ Frontend profesional
+- ✅ Sin simulaciones - código de producción
+
+---
+
+## 📞 Soporte
+
+- Stripe: <https://stripe.com/docs>
+- Mercado Pago: <https://www.mercadopago.com.mx/developers>
+- Supabase: <https://supabase.com/docs>
+- Vercel: <https://vercel.com/docs>
+
+---
+
+**Listo para producción** 🎉
