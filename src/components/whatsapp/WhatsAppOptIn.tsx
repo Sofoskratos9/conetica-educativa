@@ -84,7 +84,7 @@ export function WhatsAppOptIn({ onOptIn, context = 'general' }: WhatsAppOptInPro
                         required
                     />
                     <span className="text-xs text-gray-600">
-                        Acepto recibir mensajes educativos por WhatsApp. Puedo darme de baja en cualquier momento respondiendo "BAJA".
+                        Acepto recibir mensajes educativos por WhatsApp. Puedo darme de baja en cualquier momento respondiendo &ldquo;BAJA&rdquo;.
                     </span>
                 </label>
 

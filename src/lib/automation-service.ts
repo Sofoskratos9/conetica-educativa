@@ -1,4 +1,4 @@
-import { Bell, BookOpen, Star, Zap } from "lucide-react";
+import { BookOpen, Star, Zap } from "lucide-react";
 
 export interface Notification {
     id: string;

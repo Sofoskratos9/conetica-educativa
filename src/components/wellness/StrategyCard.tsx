@@ -20,7 +20,7 @@ export function StrategyCard({ strategy }: { strategy: Strategy }) {
                         <BookOpen size={16} /> Base Científica
                     </div>
                     <p className="text-sm text-blue-700 italic">
-                        "{strategy.science}"
+                        &ldquo;{strategy.science}&rdquo;
                     </p>
                 </div>
             </div>

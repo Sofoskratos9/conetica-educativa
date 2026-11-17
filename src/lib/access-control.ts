@@ -116,7 +116,7 @@ export async function cancelSubscription(subscriptionId: string, provider: 'stri
     }
 
     if (provider === 'stripe') {
-        const Stripe = require('stripe');
+        const { default: Stripe } = await import('stripe');
         const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
         await stripe.subscriptions.update(subscription.provider_subscription_id, {

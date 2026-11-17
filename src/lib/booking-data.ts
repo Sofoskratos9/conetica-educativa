@@ -1,4 +1,4 @@
-import { Users, Compass, TrendingUp, BookOpen } from "lucide-react";
+import { Users, Compass, TrendingUp, BookOpen, type LucideIcon } from "lucide-react";
 
 export interface Service {
     id: string;
@@ -6,7 +6,7 @@ export interface Service {
     description: string;
     duration: number; // minutes
     price: number;
-    icon: any;
+    icon: LucideIcon;
     color: string;
     bg: string;
 }
@@ -61,21 +61,26 @@ export const SERVICES: Service[] = [
 ];
 
 export function getAvailableSlots(date: Date): TimeSlot[] {
-    // Mock logic: Generate slots from 9 AM to 6 PM
     const slots: TimeSlot[] = [];
+    const dateKey = date.toISOString().split('T')[0];
+    const daySeed = date.getDate() + date.getMonth() * 31;
     const startHour = 9;
     const endHour = 18;
 
     for (let i = startHour; i < endHour; i++) {
+        // Deterministic availability based on date + hour so SSR/CSR stays consistent
+        const availableFull = (daySeed + i * 3) % 4 !== 0;
+        const availableHalf = (daySeed + i * 5 + 1) % 4 !== 0;
+
         slots.push({
-            id: `${date.toISOString().split('T')[0]}-${i}-00`,
+            id: `${dateKey}-${i}-00`,
             time: `${i}:00`,
-            available: Math.random() > 0.3 // 70% chance of being available
+            available: availableFull
         });
         slots.push({
-            id: `${date.toISOString().split('T')[0]}-${i}-30`,
+            id: `${dateKey}-${i}-30`,
             time: `${i}:30`,
-            available: Math.random() > 0.3
+            available: availableHalf
         });
     }
 

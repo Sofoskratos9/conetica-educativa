@@ -1,5 +1,6 @@
+import { createHmac } from 'node:crypto';
 import { getSupabaseAdmin } from '../supabase';
-import { sanitizeUuid } from './sanitization';
+import { sanitizeUuid, secureCompare } from './sanitization';
 
 /**
  * Authorization utilities for role-based access control
@@ -208,17 +209,16 @@ export function applyAccessFilter<T extends { user_id: string }>(
 }
 
 /**
- * Verify API key for webhook endpoints
+ * Verify HMAC-SHA256 signature for webhook endpoints
  */
 export function verifyWebhookSignature(
     signature: string,
     payload: string,
     secret: string
 ): boolean {
-    // This is a placeholder - actual implementation depends on provider
-    // For Stripe, use stripe.webhooks.constructEvent
-    // For MercadoPago, verify according to their docs
-    return true;
+    if (!signature || !payload || !secret) return false;
+    const expected = createHmac('sha256', secret).update(payload).digest('hex');
+    return secureCompare(signature, expected);
 }
 
 /**

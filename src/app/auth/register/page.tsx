@@ -1,124 +1,248 @@
 "use client";
 
 import Link from "next/link";
-import { User, Mail, Lock, ArrowRight, GraduationCap, Users, School } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+    User,
+    Mail,
+    Lock,
+    ArrowRight,
+    ArrowLeft,
+    GraduationCap,
+    Users,
+    School,
+    AlertCircle,
+} from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { useState } from "react";
+import { register, getRedirectPath } from "@/lib/auth-service";
 
 export default function RegisterPage() {
-    const [role, setRole] = useState<'student' | 'parent' | 'school'>('student');
+    const router = useRouter();
+    const [role, setRole] = useState<"student" | "parent" | "school">("student");
+    const [firstName, setFirstName] = useState("");
+    const [lastName, setLastName] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setError("");
+
+        if (role === "school") {
+            router.push("/schools");
+            return;
+        }
+
+        if (!acceptedTerms) {
+            setError("Debes aceptar los Términos de Uso y el Aviso de Privacidad.");
+            return;
+        }
+
+        if (password.length < 6) {
+            setError("La contraseña debe tener al menos 6 caracteres.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
+            const result = await register({
+                name: fullName,
+                email,
+                password,
+                role,
+            });
+
+            if (result.error || !result.session) {
+                setError(result.error || "No se pudo crear la cuenta.");
+                setIsLoading(false);
+                return;
+            }
+
+            router.push(getRedirectPath(result.session.user.role));
+            router.refresh();
+        } catch {
+            setError("Error de conexión al registrar tu cuenta.");
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen flex bg-white">
             {/* Left Side - Form */}
-            <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:p-12">
-                <div className="w-full max-w-md space-y-8">
-                    <div className="text-center lg:text-left">
-                        <Link href="/" className="text-2xl font-bold text-[var(--color-brand-600)]">
-                            Conética Educativa™
+            <div className="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12">
+                <div className="w-full max-w-md space-y-6">
+                    <div>
+                        <Link
+                            href="/"
+                            className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-900 mb-6"
+                        >
+                            <ArrowLeft size={16} /> Volver al inicio
                         </Link>
-                        <h2 className="mt-6 text-3xl font-bold text-[var(--color-brand-900)]">
-                            Crea tu cuenta
-                        </h2>
+                        <h1 className="text-3xl font-bold text-[var(--color-brand-900)]">
+                            Crea tu cuenta gratuita
+                        </h1>
                         <p className="mt-2 text-[var(--color-text-muted)]">
-                            Comienza tu viaje educativo basado en evidencia.
+                            Comienza tu diagnóstico y plan basado en evidencia científica.
                         </p>
                     </div>
+
+                    {error && (
+                        <div className="p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={18} />
+                            <p className="text-sm text-red-700">{error}</p>
+                        </div>
+                    )}
 
                     {/* Role Selection */}
                     <div className="grid grid-cols-3 gap-3">
                         <button
-                            onClick={() => setRole('student')}
-                            className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${role === 'student' ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-50)] text-[var(--color-brand-600)]' : 'border-gray-200 hover:border-gray-300 text-gray-500'}`}
+                            type="button"
+                            onClick={() => setRole("student")}
+                            className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                                role === "student"
+                                    ? "border-[var(--color-brand-500)] bg-[var(--color-brand-50)] text-[var(--color-brand-600)]"
+                                    : "border-slate-200 hover:border-slate-300 text-slate-600"
+                            }`}
                         >
-                            <GraduationCap size={24} />
-                            <span className="text-xs font-medium">Estudiante</span>
+                            <GraduationCap size={22} />
+                            <span className="text-xs font-semibold">Estudiante</span>
                         </button>
                         <button
-                            onClick={() => setRole('parent')}
-                            className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${role === 'parent' ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-50)] text-[var(--color-brand-600)]' : 'border-gray-200 hover:border-gray-300 text-gray-500'}`}
+                            type="button"
+                            onClick={() => setRole("parent")}
+                            className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                                role === "parent"
+                                    ? "border-[var(--color-brand-500)] bg-[var(--color-brand-50)] text-[var(--color-brand-600)]"
+                                    : "border-slate-200 hover:border-slate-300 text-slate-600"
+                            }`}
                         >
-                            <Users size={24} />
-                            <span className="text-xs font-medium">Padre/Tutor</span>
+                            <Users size={22} />
+                            <span className="text-xs font-semibold">Padre/Tutor</span>
                         </button>
                         <button
-                            onClick={() => setRole('school')}
-                            className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${role === 'school' ? 'border-[var(--color-brand-500)] bg-[var(--color-brand-50)] text-[var(--color-brand-600)]' : 'border-gray-200 hover:border-gray-300 text-gray-500'}`}
+                            type="button"
+                            onClick={() => setRole("school")}
+                            className={`p-3 rounded-xl border flex flex-col items-center gap-2 transition-all ${
+                                role === "school"
+                                    ? "border-[var(--color-brand-500)] bg-[var(--color-brand-50)] text-[var(--color-brand-600)]"
+                                    : "border-slate-200 hover:border-slate-300 text-slate-600"
+                            }`}
                         >
-                            <School size={24} />
-                            <span className="text-xs font-medium">Institución</span>
+                            <School size={22} />
+                            <span className="text-xs font-semibold">Institución</span>
                         </button>
                     </div>
 
-                    <form className="mt-6 space-y-4" onSubmit={(e) => e.preventDefault()}>
-                        <div className="grid grid-cols-2 gap-4">
-                            <Input
-                                label="Nombre"
-                                placeholder="Juan"
-                                icon={<User size={18} />}
-                            />
-                            <Input
-                                label="Apellidos"
-                                placeholder="Pérez"
-                            />
+                    {role === "school" ? (
+                        <div className="p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                            <h3 className="font-bold text-slate-900">Convenios y Talleres para Escuelas</h3>
+                            <p className="text-sm text-slate-600">
+                                Para instituciones educativas diseñamos propuestas a medida con acceso grupal y capacitación docente.
+                            </p>
+                            <Link href="/schools">
+                                <Button className="w-full">
+                                    Ir al Portal de Escuelas <ArrowRight size={18} className="ml-2" />
+                                </Button>
+                            </Link>
                         </div>
+                    ) : (
+                        <form className="space-y-4" onSubmit={handleSubmit}>
+                            <div className="grid grid-cols-2 gap-4">
+                                <Input
+                                    label="Nombre"
+                                    placeholder="Juan"
+                                    value={firstName}
+                                    onChange={(e) => setFirstName(e.target.value)}
+                                    icon={<User size={18} />}
+                                    required
+                                />
+                                <Input
+                                    label="Apellidos"
+                                    placeholder="Pérez"
+                                    value={lastName}
+                                    onChange={(e) => setLastName(e.target.value)}
+                                    required
+                                />
+                            </div>
 
-                        <Input
-                            label="Correo Electrónico"
-                            type="email"
-                            placeholder="tu@email.com"
-                            icon={<Mail size={18} />}
-                        />
-
-                        <Input
-                            label="Contraseña"
-                            type="password"
-                            placeholder="••••••••"
-                            icon={<Lock size={18} />}
-                        />
-
-                        <div className="flex items-start">
-                            <input
-                                id="terms"
-                                name="terms"
-                                type="checkbox"
-                                className="mt-1 h-4 w-4 text-[var(--color-brand-600)] focus:ring-[var(--color-brand-500)] border-gray-300 rounded"
+                            <Input
+                                label="Correo Electrónico"
+                                type="email"
+                                placeholder="tu@email.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                icon={<Mail size={18} />}
+                                required
                             />
-                            <label htmlFor="terms" className="ml-2 block text-sm text-gray-600">
-                                Acepto los <a href="#" className="text-[var(--color-brand-600)] hover:underline">Términos de Servicio</a> y la <a href="#" className="text-[var(--color-brand-600)] hover:underline">Política de Privacidad</a>.
-                            </label>
-                        </div>
 
-                        <Link href="/dashboard">
-                            <Button className="w-full mt-2" size="lg">
+                            <Input
+                                label="Contraseña (mín. 6 caracteres)"
+                                type="password"
+                                placeholder="••••••••"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                icon={<Lock size={18} />}
+                                required
+                            />
+
+                            <div className="flex items-start pt-1">
+                                <input
+                                    id="terms"
+                                    name="terms"
+                                    type="checkbox"
+                                    checked={acceptedTerms}
+                                    onChange={(e) => setAcceptedTerms(e.target.checked)}
+                                    className="mt-1 h-4 w-4 text-[var(--color-brand-600)] focus:ring-[var(--color-brand-500)] border-slate-300 rounded"
+                                    required
+                                />
+                                <label htmlFor="terms" className="ml-2 block text-sm text-slate-600">
+                                    Acepto los{" "}
+                                    <Link href="/legal/terms" className="text-[var(--color-brand-600)] hover:underline font-medium">
+                                        Términos de Uso
+                                    </Link>{" "}
+                                    y el{" "}
+                                    <Link href="/legal/privacy" className="text-[var(--color-brand-600)] hover:underline font-medium">
+                                        Aviso de Privacidad
+                                    </Link>
+                                    .
+                                </label>
+                            </div>
+
+                            <Button type="submit" className="w-full mt-2" size="lg" isLoading={isLoading}>
                                 Crear Cuenta <ArrowRight size={18} className="ml-2" />
                             </Button>
-                        </Link>
-                    </form>
+                        </form>
+                    )}
 
-                    <div className="mt-6 text-center text-sm">
-                        <span className="text-gray-500">¿Ya tienes una cuenta? </span>
-                        <Link href="/auth/login" className="font-medium text-[var(--color-brand-600)] hover:text-[var(--color-brand-500)]">
+                    <div className="text-center text-sm">
+                        <span className="text-slate-500">¿Ya tienes una cuenta? </span>
+                        <Link
+                            href="/auth/login"
+                            className="font-semibold text-[var(--color-brand-600)] hover:underline"
+                        >
                             Inicia sesión
                         </Link>
                     </div>
                 </div>
             </div>
 
-            {/* Right Side - Image/Brand */}
-            <div className="hidden lg:flex w-1/2 bg-[var(--color-surface-50)] relative overflow-hidden items-center justify-center">
-                <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-50"></div>
-
-                <div className="relative z-10 max-w-md text-center px-8">
-                    <div className="w-20 h-20 bg-[var(--color-brand-600)] rounded-2xl mx-auto mb-8 flex items-center justify-center text-white shadow-xl shadow-blue-500/20">
+            {/* Right Side - Visual */}
+            <div className="hidden lg:flex w-1/2 gradient-brand text-white relative overflow-hidden items-center justify-center p-12">
+                <div className="max-w-md text-center space-y-6">
+                    <div className="w-20 h-20 bg-white/10 rounded-2xl mx-auto flex items-center justify-center text-emerald-400">
                         <GraduationCap size={40} />
                     </div>
-                    <h3 className="text-3xl font-bold mb-4 text-[var(--color-brand-900)]">
-                        Únete a la comunidad educativa más avanzada.
+                    <h3 className="text-3xl font-bold text-white">
+                        Únete a una comunidad educativa ética y científica
                     </h3>
-                    <p className="text-gray-500">
-                        Accede a herramientas de diagnóstico, planes personalizados y orientación vocacional de primer nivel.
+                    <p className="text-slate-200 leading-relaxed">
+                        Accede de inmediato a herramientas de diagnóstico cognitivo, simuladores EXANI-II, orientación vocacional RIASEC y seguimiento transparente.
                     </p>
                 </div>
             </div>

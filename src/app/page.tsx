@@ -1,21 +1,24 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
+import { InteractivePreview } from "@/components/home/InteractivePreview";
 import {
   Brain,
   Target,
   BookOpen,
-  Lightbulb,
+  Compass,
   TrendingUp,
   Users,
   CheckCircle,
   Star,
   ArrowRight,
-  Sparkles,
   Award,
   Clock,
-  Zap
+  ShieldCheck,
+  GraduationCap,
+  BarChart3,
 } from "lucide-react";
 
 export default function HomePage() {
@@ -23,225 +26,363 @@ export default function HomePage() {
     {
       icon: Brain,
       title: "Diagnóstico Cognitivo-Académico",
-      description: "Identifica tus fortalezas y áreas de oportunidad con evaluaciones científicamente validadas.",
-      color: "text-blue-600",
-      bg: "bg-blue-50"
+      description:
+        "Evalúa tus fortalezas en pensamiento matemático, lectura crítica, atención ejecutiva y autorregulación.",
+      href: "/dashboard/diagnostic",
+      color: "text-blue-700",
+      bg: "bg-blue-50",
     },
     {
       icon: Target,
-      title: "Plan de Estudio Personalizado",
-      description: "Estrategias adaptadas a tu perfil cognitivo y objetivos académicos específicos.",
-      color: "text-purple-600",
-      bg: "bg-purple-50"
+      title: "Plan de Estudio Adaptativo",
+      description:
+        "Agenda semanal inteligente con técnica Pomodoro integrada y bloques de repetición espaciada.",
+      href: "/dashboard/study-plan",
+      color: "text-emerald-700",
+      bg: "bg-emerald-50",
     },
     {
       icon: BookOpen,
-      title: "Preparación EXANI-UAA",
-      description: "Simuladores, reactivos y estrategias probadas para maximizar tu puntaje de admisión.",
-      color: "text-emerald-600",
-      bg: "bg-emerald-50"
+      title: "Simulador EXANI-II & UAA",
+      description:
+        "Reactivos comentados paso a paso con escala CENEVAL (700–1300) y retroalimentación inmediata.",
+      href: "/dashboard/exani",
+      color: "text-indigo-700",
+      bg: "bg-indigo-50",
     },
     {
-      icon: Lightbulb,
-      title: "Orientación Vocacional",
-      description: "Descubre tu perfil RIASEC y las carreras que mejor se alinean con tus intereses.",
-      color: "text-yellow-600",
-      bg: "bg-yellow-50"
+      icon: Compass,
+      title: "Orientación Vocacional RIASEC",
+      description:
+        "Perfil hexagonal de Holland con radar interactivo y compatibilidad con carreras universitarias.",
+      href: "/dashboard/vocational",
+      color: "text-amber-700",
+      bg: "bg-amber-50",
     },
     {
       icon: TrendingUp,
-      title: "Manejo de Estrés Académico",
-      description: "Técnicas de autorregulación y organización basadas en neurociencia aplicada.",
-      color: "text-pink-600",
-      bg: "bg-pink-50"
+      title: "Bienestar y Autorregulación",
+      description:
+        "Protocolos no clínicos de manejo del tiempo, claridad cognitiva y preparación ante exámenes.",
+      href: "/dashboard/wellness",
+      color: "text-teal-700",
+      bg: "bg-teal-50",
     },
     {
       icon: Users,
-      title: "Estrategias Digitales",
-      description: "Aprovecha herramientas tecnológicas para optimizar tu aprendizaje y productividad.",
-      color: "text-indigo-600",
-      bg: "bg-indigo-50"
-    }
+      title: "Panel para Familias y Escuelas",
+      description:
+        "Seguimiento respetuoso de hábitos y consistencia para padres, más talleres para instituciones.",
+      href: "/schools",
+      color: "text-slate-700",
+      bg: "bg-slate-100",
+    },
   ];
 
   const testimonials = [
     {
       name: "María González",
-      role: "Estudiante UAA - Ingeniería",
-      content: "Gracias a Conética mejoré mi puntaje en el EXANI-II en 15 puntos. El diagnóstico personalizado fue clave.",
-      rating: 5
+      role: "Estudiante UAA • Ingeniería",
+      content:
+        "Gracias a Conética mejoré mi puntaje en el EXANI-II en 15 puntos porcentuales. El diagnóstico inicial me mostró exactamente qué repasar.",
+      rating: 5,
     },
     {
       name: "Carlos Ramírez",
-      role: "Padre de Familia",
-      content: "El panel para padres me permite dar seguimiento al progreso de mi hijo sin presionarlo. Excelente herramienta.",
-      rating: 5
+      role: "Padre de Familia • Aguascalientes",
+      content:
+        "El panel familiar me permite acompañar la constancia de mi hijo sin presionarlo ni invadir su autonomía.",
+      rating: 5,
     },
     {
       name: "Ana Martínez",
-      role: "Estudiante - Medicina",
-      content: "La orientación vocacional me ayudó a confirmar mi decisión de estudiar medicina. Muy recomendable.",
-      rating: 5
-    }
+      role: "Estudiante • Medicina",
+      content:
+        "El perfil RIASEC y la asesoría vocacional me dieron claridad total antes de presentar mi examen de admisión.",
+      rating: 5,
+    },
   ];
 
   const stats = [
-    { value: "95%", label: "Tasa de admisión" },
-    { value: "500+", label: "Estudiantes activos" },
-    { value: "4.9/5", label: "Calificación promedio" },
-    { value: "100%", label: "Basado en evidencia" }
+    { value: "95%", label: "Tasa de admisión en primera opción" },
+    { value: "500+", label: "Estudiantes activos en Aguascalientes" },
+    { value: "4.9/5", label: "Satisfacción de estudiantes y familias" },
+    { value: "100%", label: "Metodologías basadas en evidencia" },
   ];
 
   return (
-    <div className="min-h-screen">
+    <div className="bg-[var(--color-surface-50)]">
       {/* Hero Section */}
-      <section className="relative gradient-brand text-white py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-20 left-10 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-green-400 rounded-full blur-3xl"></div>
-        </div>
+      <section className="relative gradient-brand text-white overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          <div className="grid lg:grid-cols-12 gap-12 items-center">
+            {/* Left Copy */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="lg:col-span-6 space-y-6"
+            >
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-emerald-300">
+                <ShieldCheck size={16} />
+                <span>Plataforma Educativa Basada en Evidencia</span>
+              </div>
 
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full mb-6">
-              <Sparkles size={16} className="text-yellow-300" />
-              <span className="text-sm font-medium">Plataforma educativa basada en evidencia científica</span>
-            </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
+                Aprende con método científico, alcanza tu admisión universitaria.
+              </h1>
 
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
-              Conética Educativa™
-            </h1>
-            <p className="text-xl md:text-2xl text-blue-100 max-w-3xl mx-auto mb-8">
-              Transforma tu aprendizaje con estrategias personalizadas, diagnósticos científicos y acompañamiento profesional.
-            </p>
+              <p className="text-lg sm:text-xl text-slate-200 leading-relaxed max-w-xl">
+                Diagnóstico cognitivo-académico, simuladores EXANI-II, orientación vocacional RIASEC y acompañamiento ético para estudiantes, familias e instituciones.
+              </p>
 
-            <div className="flex flex-wrap gap-4 justify-center mb-12">
-              <Link href="/auth/register">
-                <Button className="bg-white text-[var(--color-brand-900)] hover:bg-gray-100 px-8 py-6 text-lg">
-                  <Zap size={20} className="mr-2" /> Comenzar Gratis
-                </Button>
-              </Link>
-              <Link href="/services">
-                <Button variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-6 text-lg">
-                  Ver Servicios <ArrowRight size={20} className="ml-2" />
-                </Button>
-              </Link>
-            </div>
+              <div className="flex flex-wrap gap-4 pt-2">
+                <Link href="/auth/register">
+                  <Button
+                    size="lg"
+                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-lg shadow-emerald-950/30"
+                  >
+                    Comenzar Gratis
+                    <ArrowRight size={18} className="ml-2" />
+                  </Button>
+                </Link>
+                <Link href="/services">
+                  <Button
+                    variant="outline"
+                    size="lg"
+                    className="border-white/30 text-white hover:bg-white/10 hover:text-white hover:border-white"
+                  >
+                    Explorar Servicios
+                  </Button>
+                </Link>
+              </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
-              {stats.map((stat, i) => (
-                <div key={i} className="text-center">
-                  <div className="text-3xl md:text-4xl font-bold mb-1">{stat.value}</div>
-                  <div className="text-sm text-blue-200">{stat.label}</div>
+              <div className="pt-4 flex flex-wrap items-center gap-6 text-sm text-slate-300">
+                <span className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-emerald-400" />
+                  Plan gratuito robusto
+                </span>
+                <span className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-emerald-400" />
+                  Servicio educativo (no clínico)
+                </span>
+              </div>
+            </motion.div>
+
+            {/* Right Visual Showcase */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.55, delay: 0.1 }}
+              className="lg:col-span-6"
+            >
+              <div className="relative rounded-2xl overflow-hidden border border-white/15 shadow-2xl bg-slate-900/40">
+                <img
+                  src="/images/hero-illustration.jpg"
+                  alt="Ilustración editorial de aprendizaje científico, neurociencia aplicada y orientación académica en Conética Educativa"
+                  className="w-full h-auto object-cover"
+                />
+                <div className="p-5 bg-slate-950/85 backdrop-blur-md border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                      <BarChart3 size={20} />
+                    </div>
+                    <div>
+                      <div className="text-sm font-bold text-white">Simulador EXANI-II &amp; Perfil RIASEC</div>
+                      <div className="text-xs text-slate-300">Alineado a CENEVAL, SEP, OCDE y UNESCO</div>
+                    </div>
+                  </div>
+                  <Link
+                    href="/auth/login"
+                    className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
+                  >
+                    Probar Demo <ArrowRight size={14} />
+                  </Link>
                 </div>
-              ))}
-            </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Stats Strip */}
+          <div className="mt-14 pt-10 border-t border-white/15 grid grid-cols-2 lg:grid-cols-4 gap-8">
+            {stats.map((stat, i) => (
+              <div key={i}>
+                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                  {stat.value}
+                </div>
+                <div className="text-sm text-slate-300 mt-1">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
       {/* Value Proposition */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              ¿Por qué Conética Educativa?
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <div className="max-w-2xl mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-4">
+              Ciencia cognitiva aplicada, sin pseudociencia ni falsas promesas
             </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Combinamos neurociencia, pedagogía y tecnología para maximizar tu potencial académico.
+            <p className="text-lg text-slate-600">
+              Cada herramienta en Conética Educativa™ está fundamentada en investigación verificable sobre recuperación activa, práctica espaciada y funciones ejecutivas.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 rounded-full mb-4">
-                <Award className="text-green-600" size={32} />
+            <div className="surface-card rounded-2xl p-7">
+              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-5">
+                <Award size={26} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">100% Basado en Evidencia</h3>
-              <p className="text-gray-600">
-                Todas nuestras estrategias están respaldadas por investigación científica verificable.
+              <h3 className="text-xl font-bold text-slate-900 mb-2">100% Basado en Evidencia</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Metodologías respaldadas por guías de CENEVAL, SEP, OCDE y literatura peer-reviewed en psicología educativa y neurociencia.
               </p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
-                <Target className="text-blue-600" size={32} />
+            <div className="surface-card rounded-2xl p-7">
+              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-5">
+                <Target size={26} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Personalización Total</h3>
-              <p className="text-gray-600">
-                Diagnósticos individuales y planes adaptados a tu perfil cognitivo único.
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Personalización Real</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Tu diagnóstico ajusta automáticamente las prioridades de estudio, metas semanales y simulacros recomendados.
               </p>
             </div>
 
-            <div className="text-center p-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 bg-purple-100 rounded-full mb-4">
-                <Clock className="text-purple-600" size={32} />
+            <div className="surface-card rounded-2xl p-7">
+              <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-5">
+                <Clock size={26} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">Resultados Comprobados</h3>
-              <p className="text-gray-600">
-                95% de nuestros estudiantes logran admisión en su primera opción.
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Transparencia y Ética</h3>
+              <p className="text-slate-600 text-sm leading-relaxed">
+                Protección estricta de datos bajo la LFPDPPP, respeto total a la autonomía del estudiante y claridad en nuestros alcances no clínicos.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Modules Section */}
-      <section className="py-16 px-4 bg-gray-50">
+      {/* Modules Grid */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Módulos Educativos
-            </h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Accede a un ecosistema completo de herramientas para tu desarrollo académico.
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
+            <div className="max-w-2xl">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-3">
+                Ecosistema de Módulos Interactivos
+              </h2>
+              <p className="text-lg text-slate-600">
+                Herramientas diseñadas para trabajar juntas desde el primer diagnóstico hasta el día de tu examen.
+              </p>
+            </div>
+            <Link href="/auth/register">
+              <Button variant="outline" className="gap-2">
+                Crear cuenta gratuita <ArrowRight size={16} />
+              </Button>
+            </Link>
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {modules.map((module, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-gray-200 hover:shadow-lg transition-shadow">
-                <div className={`inline-flex items-center justify-center w-12 h-12 ${module.bg} rounded-xl mb-4`}>
-                  <module.icon className={module.color} size={24} />
+            {modules.map((mod, i) => (
+              <Link key={i} href={mod.href} className="group">
+                <div className="surface-card rounded-2xl p-7 h-full flex flex-col">
+                  <div className={`w-12 h-12 ${mod.bg} ${mod.color} rounded-xl flex items-center justify-center mb-5`}>
+                    <mod.icon size={24} />
+                  </div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-[var(--color-brand-600)] transition-colors">
+                    {mod.title}
+                  </h3>
+                  <p className="text-slate-600 text-sm leading-relaxed flex-1">
+                    {mod.description}
+                  </p>
+                  <div className="mt-5 pt-4 border-t border-slate-100 flex items-center text-sm font-semibold text-[var(--color-brand-600)]">
+                    Abrir módulo
+                    <ArrowRight size={15} className="ml-1.5 group-hover:translate-x-1 transition-transform" />
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-2">{module.title}</h3>
-                <p className="text-gray-600 text-sm">{module.description}</p>
-              </div>
+              </Link>
             ))}
           </div>
+        </div>
+      </section>
 
-          <div className="text-center mt-12">
-            <Link href="/auth/register">
-              <Button className="px-8 py-4 text-lg gradient-accent text-white">
-                Explorar Módulos Gratis <ArrowRight size={20} className="ml-2" />
-              </Button>
-            </Link>
+      {/* Interactive Live Sandbox */}
+      <InteractivePreview />
+
+      {/* Schools / Institutional Showcase */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-slate-200">
+        <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-6">
+            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+              <img
+                src="/images/schools-illustration.jpg"
+                alt="Talleres colaborativos y pensamiento crítico para escuelas e instituciones educativas"
+                className="w-full h-auto object-cover"
+              />
+            </div>
+          </div>
+
+          <div className="lg:col-span-6 space-y-6">
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[var(--color-brand-600)]">
+              <GraduationCap size={18} />
+              <span>Para Colegios y Universidades</span>
+            </div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)]">
+              Lleva metodologías de alto impacto a tu institución
+            </h2>
+            <p className="text-lg text-slate-600 leading-relaxed">
+              Impartimos talleres presenciales y virtuales sobre funciones ejecutivas, pensamiento crítico, proyecto de vida e inteligencia artificial ética para docentes en Aguascalientes y todo México.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4 pt-2">
+              {[
+                "Pensar antes de actuar (Alumnos)",
+                "IA Responsable para Docentes",
+                "Pensamiento Crítico en el Aula",
+                "Proyecto de Vida y Vocación",
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2.5 text-sm font-medium text-slate-800">
+                  <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+            <div className="pt-2">
+              <Link href="/schools">
+                <Button size="lg" className="gap-2">
+                  Solicitar Propuesta Institucional <ArrowRight size={18} />
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Testimonials */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Lo que dicen nuestros estudiantes
+      <section className="py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center max-w-2xl mx-auto mb-14">
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-3">
+              Resultados respaldados por nuestra comunidad
             </h2>
+            <p className="text-slate-600 text-lg">
+              Estudiantes y familias que transformaron su forma de estudiar y decidir su futuro profesional.
+            </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, i) => (
-              <div key={i} className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-                <div className="flex gap-1 mb-4">
-                  {[...Array(testimonial.rating)].map((_, j) => (
-                    <Star key={j} size={16} className="text-yellow-400 fill-yellow-400" />
-                  ))}
-                </div>
-                <p className="text-gray-700 mb-4 italic">"{testimonial.content}"</p>
+            {testimonials.map((t, i) => (
+              <div key={i} className="surface-card rounded-2xl p-7 flex flex-col justify-between">
                 <div>
-                  <div className="font-bold text-gray-900">{testimonial.name}</div>
-                  <div className="text-sm text-gray-500">{testimonial.role}</div>
+                  <div className="flex gap-1 mb-4">
+                    {[...Array(t.rating)].map((_, j) => (
+                      <Star key={j} size={16} className="text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
+                  <p className="text-slate-700 leading-relaxed mb-6">&ldquo;{t.content}&rdquo;</p>
+                </div>
+                <div className="pt-4 border-t border-slate-100">
+                  <div className="font-bold text-slate-900">{t.name}</div>
+                  <div className="text-xs text-slate-500 mt-0.5">{t.role}</div>
                 </div>
               </div>
             ))}
@@ -249,89 +390,58 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section - Paid Services */}
-      <section className="py-16 px-4 bg-gradient-to-br from-blue-600 to-purple-600 text-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            ¿Necesitas acompañamiento personalizado?
-          </h2>
-          <p className="text-xl text-blue-100 mb-8">
-            Agenda sesiones 1:1 con nuestros expertos o adquiere programas completos de preparación.
-          </p>
-          <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/services">
-              <Button className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg">
-                Ver Servicios y Precios
-              </Button>
-            </Link>
-            <Link href="/dashboard/booking">
-              <Button variant="outline" className="border-2 border-white text-white hover:bg-white/10 px-8 py-4 text-lg">
-                Agendar Sesión
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section - Premium Subscription */}
-      <section className="py-16 px-4 bg-gray-900 text-white">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex flex-col md:flex-row items-center gap-8">
-            <div className="flex-1">
-              <div className="inline-flex items-center gap-2 bg-green-500/20 px-3 py-1 rounded-full mb-4">
-                <Star size={16} className="text-green-400" />
-                <span className="text-sm font-medium text-green-400">Conética Premium</span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Desbloquea todo el potencial de la plataforma
-              </h2>
-              <ul className="space-y-3 mb-6">
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
-                  <span>Acceso ilimitado a todos los módulos</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
-                  <span>Simuladores de examen sin límite</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
-                  <span>Recomendaciones personalizadas con IA</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <CheckCircle size={20} className="text-green-400 flex-shrink-0" />
-                  <span>Soporte prioritario 24/7</span>
-                </li>
-              </ul>
+      {/* Premium CTA */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 gradient-brand text-white">
+        <div className="max-w-5xl mx-auto grid md:grid-cols-12 gap-10 items-center">
+          <div className="md:col-span-7 space-y-5">
+            <div className="text-xs font-bold uppercase tracking-widest text-emerald-300">
+              Conética Premium
             </div>
-            <div className="bg-white text-gray-900 rounded-2xl p-8 text-center">
-              <div className="text-5xl font-bold mb-2">$299</div>
-              <div className="text-gray-500 mb-6">MXN/mes</div>
+            <h2 className="text-3xl sm:text-4xl font-bold text-white">
+              Desbloquea todo el ecosistema sin límites
+            </h2>
+            <p className="text-slate-200 text-lg">
+              Accede a simuladores ilimitados estilo EXANI-II, tu plan semanal adaptativo y orientación vocacional completa.
+            </p>
+            <ul className="space-y-2.5 text-sm text-slate-100">
+              {[
+                "Acceso completo a los 6 módulos educativos",
+                "Simuladores EXANI-II cronometrados e ilimitados",
+                "Reportes detallados de progreso y panel familiar",
+                "Cancela cuando quieras, sin plazos forzosos",
+              ].map((feat, idx) => (
+                <li key={idx} className="flex items-center gap-2.5">
+                  <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />
+                  <span>{feat}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="md:col-span-5">
+            <div className="bg-white text-slate-900 rounded-2xl p-8 shadow-2xl text-center">
+              <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                Membresía Mensual
+              </div>
+              <div className="flex items-baseline justify-center gap-1 mb-2">
+                <span className="text-5xl font-extrabold text-[var(--color-brand-900)]">$299</span>
+                <span className="text-slate-500 font-medium">MXN/mes</span>
+              </div>
+              <p className="text-xs text-slate-500 mb-6">Pagos seguros con Stripe y Mercado Pago</p>
+
               <Link href="/checkout?product=premium_monthly">
-                <Button className="w-full gradient-accent text-white py-4 text-lg">
-                  Suscribirme Ahora
+                <Button className="w-full py-4 text-base gradient-accent text-white font-bold">
+                  Suscribirme Ahora <ArrowRight size={18} className="ml-2" />
                 </Button>
               </Link>
-              <p className="text-xs text-gray-500 mt-4">Cancela cuando quieras</p>
+              <Link
+                href="/pricing"
+                className="block mt-4 text-xs font-semibold text-[var(--color-brand-600)] hover:underline"
+              >
+                Comparar plan gratuito vs Premium
+              </Link>
             </div>
           </div>
-        </div>
-      </section>
-
-      {/* Final CTA */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-            Comienza tu transformación académica hoy
-          </h2>
-          <p className="text-xl text-gray-600 mb-8">
-            Únete a cientos de estudiantes que ya están alcanzando sus metas con Conética Educativa™
-          </p>
-          <Link href="/auth/register">
-            <Button className="px-12 py-6 text-xl gradient-brand text-white">
-              Registrarse Gratis <ArrowRight size={24} className="ml-2" />
-            </Button>
-          </Link>
         </div>
       </section>
     </div>

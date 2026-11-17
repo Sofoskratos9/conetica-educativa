@@ -94,7 +94,7 @@ export function sanitizeJson<T>(input: string, schema: z.ZodSchema<T>): T {
     try {
         const parsed = JSON.parse(input);
         return schema.parse(parsed);
-    } catch (error) {
+    } catch {
         throw new Error('Invalid JSON format or schema validation failed');
     }
 }
@@ -155,14 +155,7 @@ export function generateSecureToken(length: number = 32): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     const randomValues = new Uint8Array(length);
-
-    if (typeof window !== 'undefined') {
-        window.crypto.getRandomValues(randomValues);
-    } else {
-        // Node.js environment
-        const crypto = require('crypto');
-        crypto.randomFillSync(randomValues);
-    }
+    globalThis.crypto.getRandomValues(randomValues);
 
     for (let i = 0; i < length; i++) {
         result += chars[randomValues[i] % chars.length];

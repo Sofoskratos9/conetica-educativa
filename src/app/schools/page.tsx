@@ -4,72 +4,109 @@ import { useState } from "react";
 import { WORKSHOPS } from "@/lib/schools-data";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { GraduationCap, Check, Send, Building2 } from "lucide-react";
+import { GraduationCap, Check, Send, Building2, AlertCircle } from "lucide-react";
 
 export default function SchoolsPage() {
     const [formData, setFormData] = useState({
-        name: '',
-        school: '',
-        position: '',
-        email: '',
-        phone: '',
-        interest: ''
+        name: "",
+        school: "",
+        position: "",
+        email: "",
+        phone: "",
+        interest: "",
     });
-    const [submitted, setSubmitted] = useState(false);
+    const [submittedRef, setSubmittedRef] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [error, setError] = useState("");
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate form submission
-        console.log('Form submitted:', formData);
-        setSubmitted(true);
-        setTimeout(() => setSubmitted(false), 3000);
+        setError("");
+        setIsSubmitting(true);
+
+        try {
+            const res = await fetch("/api/schools/inquiry", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(formData),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.error || "No se pudo enviar la solicitud.");
+                setIsSubmitting(false);
+                return;
+            }
+            setSubmittedRef(data.referenceId);
+            setFormData({ name: "", school: "", position: "", email: "", phone: "", interest: "" });
+        } catch {
+            setError("Error de red al enviar la solicitud.");
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-[var(--color-surface-50)]">
             {/* Hero Section */}
-            <div className="bg-gradient-to-br from-[var(--color-brand-900)] to-[var(--color-brand-700)] text-white py-20 px-4">
-                <div className="max-w-6xl mx-auto text-center">
-                    <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full mb-6">
-                        <Building2 size={20} />
-                        <span className="text-sm font-medium">Para Instituciones Educativas</span>
+            <div className="gradient-brand text-white py-20 px-4">
+                <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
+                    <div className="lg:col-span-7 space-y-5">
+                        <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-emerald-300">
+                            <Building2 size={16} />
+                            <span>Para Instituciones Educativas</span>
+                        </div>
+                        <h1 className="text-4xl sm:text-5xl font-bold text-white">
+                            Talleres Transformadores para tu Colegio
+                        </h1>
+                        <p className="text-lg sm:text-xl text-slate-200 max-w-2xl">
+                            Programas basados en evidencia científica para fortalecer funciones ejecutivas, pensamiento crítico y uso ético de la IA en estudiantes y docentes.
+                        </p>
                     </div>
-                    <h1 className="text-5xl font-bold mb-6">Talleres Transformadores para tu Colegio</h1>
-                    <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-                        Programas basados en evidencia científica para desarrollar habilidades del siglo XXI en estudiantes y docentes.
-                    </p>
+                    <div className="lg:col-span-5">
+                        <div className="rounded-2xl overflow-hidden border border-white/15 shadow-2xl">
+                            <img
+                                src="/images/schools-illustration.jpg"
+                                alt="Talleres colaborativos Conética Educativa"
+                                className="w-full h-auto object-cover"
+                            />
+                        </div>
+                    </div>
                 </div>
             </div>
 
             {/* Workshops Grid */}
             <div className="max-w-7xl mx-auto px-4 py-16">
-                <h2 className="text-3xl font-bold text-gray-900 mb-12 text-center">Nuestros Talleres</h2>
+                <h2 className="text-3xl font-bold text-slate-900 mb-10 text-center">Nuestros Talleres</h2>
 
                 <div className="grid md:grid-cols-2 gap-8 mb-20">
                     {WORKSHOPS.map((workshop) => (
-                        <div key={workshop.id} className="bg-white rounded-2xl p-8 border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex items-start gap-4 mb-6">
+                        <div key={workshop.id} className="surface-card rounded-2xl p-8">
+                            <div className="flex items-start gap-4 mb-5">
                                 <div className={`p-3 rounded-xl ${workshop.bg} ${workshop.color}`}>
                                     <workshop.icon size={28} />
                                 </div>
                                 <div className="flex-1">
-                                    <h3 className="text-2xl font-bold text-gray-900 mb-2">{workshop.title}</h3>
+                                    <h3 className="text-2xl font-bold text-slate-900 mb-2">{workshop.title}</h3>
                                     <div className="flex items-center gap-3 text-sm">
-                                        <span className={`px-3 py-1 rounded-full ${workshop.bg} ${workshop.color} font-medium`}>
+                                        <span
+                                            className={`px-3 py-1 rounded-full ${workshop.bg} ${workshop.color} font-semibold text-xs`}
+                                        >
                                             {workshop.targetAudience}
                                         </span>
-                                        <span className="text-gray-500">• {workshop.duration}</span>
+                                        <span className="text-slate-500">• {workshop.duration}</span>
                                     </div>
                                 </div>
                             </div>
 
-                            <p className="text-gray-600 mb-6">{workshop.description}</p>
+                            <p className="text-slate-600 mb-6">{workshop.description}</p>
 
-                            <div className="space-y-2 mb-6">
-                                <div className="text-sm font-bold text-gray-700 mb-3">Beneficios clave:</div>
+                            <div className="space-y-2">
+                                <div className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                                    Beneficios clave
+                                </div>
                                 {workshop.benefits.map((benefit, i) => (
-                                    <div key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                                        <Check size={16} className="text-green-500 flex-shrink-0" />
+                                    <div key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                                        <Check size={16} className="text-emerald-600 flex-shrink-0" />
                                         <span>{benefit}</span>
                                     </div>
                                 ))}
@@ -79,20 +116,32 @@ export default function SchoolsPage() {
                 </div>
 
                 {/* Contact Form */}
-                <div className="bg-white rounded-2xl p-10 border border-gray-200 shadow-lg max-w-3xl mx-auto">
+                <div className="surface-card rounded-2xl p-8 sm:p-10 max-w-3xl mx-auto">
                     <div className="text-center mb-8">
-                        <GraduationCap className="mx-auto mb-4 text-[var(--color-brand-600)]" size={48} />
-                        <h2 className="text-3xl font-bold text-gray-900 mb-3">Solicita Información</h2>
-                        <p className="text-gray-600">
-                            Completa el formulario y nos pondremos en contacto contigo para diseñar una propuesta personalizada.
+                        <GraduationCap className="mx-auto mb-3 text-[var(--color-brand-600)]" size={44} />
+                        <h2 className="text-3xl font-bold text-slate-900 mb-2">Solicita una Propuesta</h2>
+                        <p className="text-slate-600">
+                            Completa el formulario y diseñaremos un programa a la medida de tu institución.
                         </p>
                     </div>
 
-                    {submitted ? (
-                        <div className="bg-green-50 border border-green-200 rounded-xl p-6 text-center">
-                            <Check size={48} className="text-green-600 mx-auto mb-3" />
-                            <h3 className="text-xl font-bold text-green-900 mb-2">¡Solicitud Enviada!</h3>
-                            <p className="text-green-700">Nos pondremos en contacto contigo en las próximas 24 horas.</p>
+                    {error && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={18} />
+                            <p className="text-sm text-red-700">{error}</p>
+                        </div>
+                    )}
+
+                    {submittedRef ? (
+                        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center space-y-3">
+                            <Check size={44} className="text-emerald-600 mx-auto" />
+                            <h3 className="text-xl font-bold text-emerald-900">¡Solicitud Registrada!</h3>
+                            <p className="text-sm text-emerald-800">
+                                Folio de seguimiento: <strong className="font-mono">{submittedRef}</strong>. Nos pondremos en contacto en menos de 24 horas hábiles.
+                            </p>
+                            <Button variant="outline" size="sm" onClick={() => setSubmittedRef(null)}>
+                                Enviar otra consulta
+                            </Button>
                         </div>
                     ) : (
                         <form onSubmit={handleSubmit} className="space-y-6">
@@ -104,7 +153,7 @@ export default function SchoolsPage() {
                                     required
                                 />
                                 <Input
-                                    label="Nombre del Colegio"
+                                    label="Nombre del Colegio o Institución"
                                     value={formData.school}
                                     onChange={(e) => setFormData({ ...formData, school: e.target.value })}
                                     required
@@ -113,14 +162,14 @@ export default function SchoolsPage() {
 
                             <div className="grid md:grid-cols-2 gap-6">
                                 <Input
-                                    label="Cargo/Posición"
+                                    label="Cargo / Posición"
                                     value={formData.position}
                                     onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                                    placeholder="Ej: Director, Coordinador"
+                                    placeholder="Ej: Director, Coordinador Académico"
                                     required
                                 />
                                 <Input
-                                    label="Correo Electrónico"
+                                    label="Correo Electrónico Institucional"
                                     type="email"
                                     value={formData.email}
                                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -129,34 +178,37 @@ export default function SchoolsPage() {
                             </div>
 
                             <Input
-                                label="Teléfono"
+                                label="Teléfono de Contacto"
                                 type="tel"
                                 value={formData.phone}
                                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                placeholder="449 123 4567"
                                 required
                             />
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-slate-600 mb-1.5">
                                     Taller de Interés
                                 </label>
                                 <select
                                     value={formData.interest}
                                     onChange={(e) => setFormData({ ...formData, interest: e.target.value })}
-                                    className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 outline-none"
+                                    className="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white focus:ring-2 focus:ring-[var(--color-brand-500)] outline-none"
                                     required
                                 >
                                     <option value="">Selecciona un taller</option>
                                     {WORKSHOPS.map((w) => (
-                                        <option key={w.id} value={w.id}>{w.title}</option>
+                                        <option key={w.id} value={w.id}>
+                                            {w.title}
+                                        </option>
                                     ))}
                                     <option value="multiple">Varios talleres</option>
                                     <option value="custom">Propuesta personalizada</option>
                                 </select>
                             </div>
 
-                            <Button type="submit" className="w-full py-4 text-lg">
-                                <Send size={20} className="mr-2" /> Enviar Solicitud
+                            <Button type="submit" className="w-full py-4 text-base" isLoading={isSubmitting}>
+                                <Send size={18} className="mr-2" /> Enviar Solicitud
                             </Button>
                         </form>
                     )}

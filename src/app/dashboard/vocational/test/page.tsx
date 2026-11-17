@@ -3,8 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/Button";
+import { ArrowLeft } from "lucide-react";
 import { QUESTIONS } from "@/lib/vocational-data";
 import { calculateRiasecScore, getTopCodes, getSuggestedCareers } from "@/lib/vocational-logic";
 

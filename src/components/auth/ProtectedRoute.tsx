@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { getCurrentUser, canAccessRoute, type User } from "@/lib/auth-service";
+import { getCurrentUser, fetchServerSession, type User } from "@/lib/auth-service";
 
 interface ProtectedRouteProps {
     children: React.ReactNode;
@@ -20,26 +20,31 @@ export function ProtectedRoute({
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        const currentUser = getCurrentUser();
+        let active = true;
+        async function verify() {
+            const currentUser = getCurrentUser() || (await fetchServerSession());
+            if (!active) return;
 
-        if (!currentUser) {
-            router.push(fallbackPath);
-            return;
+            if (!currentUser) {
+                router.push(fallbackPath);
+                return;
+            }
+
+            if (requiredRoles && !requiredRoles.includes(currentUser.role)) {
+                const redirectPath = currentUser.role === 'parent'
+                    ? '/parent/dashboard'
+                    : currentUser.role === 'admin'
+                        ? '/admin/analytics'
+                        : '/dashboard';
+                router.push(redirectPath);
+                return;
+            }
+
+            setUser(currentUser);
+            setIsLoading(false);
         }
-
-        if (requiredRoles && !requiredRoles.includes(currentUser.role)) {
-            // Redirect to appropriate dashboard based on role
-            const redirectPath = currentUser.role === 'parent'
-                ? '/parent/dashboard'
-                : currentUser.role === 'admin'
-                    ? '/admin/analytics'
-                    : '/dashboard';
-            router.push(redirectPath);
-            return;
-        }
-
-        setUser(currentUser);
-        setIsLoading(false);
+        verify();
+        return () => { active = false; };
     }, [router, requiredRoles, fallbackPath]);
 
     if (isLoading) {

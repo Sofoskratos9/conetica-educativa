@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Shield, FileText, Heart, ArrowLeft } from "lucide-react";
+import { Shield, ArrowLeft } from "lucide-react";
 
 export default function PrivacyPage() {
     return (

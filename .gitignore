@@ -7,8 +7,10 @@ node_modules
 .next
 dist
 build
+.out
 out
 .turbo
+*.tsbuildinfo
 
 # Environment variables (CRITICAL - DO NOT COMMIT)
 .env

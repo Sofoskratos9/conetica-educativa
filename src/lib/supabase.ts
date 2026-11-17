@@ -1,31 +1,46 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase client for client-side operations (uses anon key)
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
-// Only throw error at runtime, not during build
-if (typeof window !== 'undefined' && (!supabaseUrl || !supabaseAnonKey)) {
-    console.warn('Missing Supabase environment variables. Check your .env.local file.');
+export function isSupabaseConfigured(): boolean {
+    return (
+        Boolean(supabaseUrl) &&
+        Boolean(supabaseAnonKey) &&
+        !supabaseUrl.includes('dummy-project') &&
+        !supabaseUrl.includes('REPLACE_WITH_YOUR_PROJECT') &&
+        !supabaseAnonKey.includes('REPLACE_WITH_YOUR_ANON_KEY')
+    );
 }
 
-export const supabase = supabaseUrl && supabaseAnonKey
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : null as any;
+export function isStripeConfigured(): boolean {
+    const key = process.env.STRIPE_SECRET_KEY || '';
+    return (
+        Boolean(key) &&
+        key.startsWith('sk_') &&
+        !key.includes('dummy') &&
+        !key.includes('REPLACE_WITH')
+    );
+}
 
-// Supabase admin client for server-side operations (uses service role key)
-// This bypasses RLS - use only in API routes and server components
+export function isMercadoPagoConfigured(): boolean {
+    const token = process.env.MERCADOPAGO_ACCESS_TOKEN || '';
+    return (
+        Boolean(token) &&
+        !token.includes('dummy') &&
+        !token.includes('REPLACE_WITH')
+    );
+}
+
+export const supabase = isSupabaseConfigured()
+    ? createClient(supabaseUrl, supabaseAnonKey)
+    : (null as any);
+
 export function getSupabaseAdmin() {
     const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 
-    if (!serviceRoleKey || !supabaseUrl) {
-        // During build time, return a mock client
-        if (process.env.NODE_ENV === 'production' && !process.env.VERCEL) {
-            console.warn('Missing SUPABASE_SERVICE_ROLE_KEY. Using mock client for build.');
-            return null as any;
-        }
-        throw new Error('Missing SUPABASE_SERVICE_ROLE_KEY. This is required for admin operations.');
+    if (!isSupabaseConfigured() || !serviceRoleKey || serviceRoleKey.includes('REPLACE_WITH')) {
+        return null as any;
     }
 
     return createClient(supabaseUrl, serviceRoleKey, {
@@ -36,7 +51,6 @@ export function getSupabaseAdmin() {
     });
 }
 
-// Database types (auto-generated from Supabase schema)
 export interface Database {
     public: {
         Tables: {

@@ -46,7 +46,7 @@ export default function EthicsPage() {
                                     <div>
                                         <h3 className="font-bold text-gray-900">2. Transparencia Total</h3>
                                         <p className="text-gray-700">
-                                            Explicamos claramente las bases científicas de cada estrategia. Los estudiantes y padres tienen derecho a conocer el "por qué" detrás de cada recomendación.
+                                            Explicamos claramente las bases científicas de cada estrategia. Los estudiantes y padres tienen derecho a conocer el &ldquo;por qué&rdquo; detrás de cada recomendación.
                                         </p>
                                     </div>
                                 </div>
