@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { findUserByEmail } from '@/lib/auth-server';
 import { createPasswordResetToken } from '@/lib/session';
-import { isSupabaseConfigured } from '@/lib/supabase';
+import { getDatabaseMode } from '@/lib/db';
 import { checkRateLimit } from '@/lib/security/sanitization';
 
 const ForgotSchema = z.object({
@@ -28,9 +28,12 @@ export async function POST(request: NextRequest) {
         if (user) {
             const token = await createPasswordResetToken(user.email);
             const appUrl =
-                process.env.NEXT_PUBLIC_APP_URL ||
-                request.nextUrl.origin ||
-                'http://localhost:3000';
+                process.env.NEXT_PUBLIC_APP_URL &&
+                !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
+                    ? process.env.NEXT_PUBLIC_APP_URL
+                    : request.nextUrl.origin ||
+                      process.env.NEXT_PUBLIC_APP_URL ||
+                      'http://localhost:3000';
             const resetUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
 
             const resendApiKey = process.env.RESEND_API_KEY;
@@ -48,7 +51,7 @@ export async function POST(request: NextRequest) {
                         html: `<p>Hola ${user.name},</p><p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace (válido por 30 minutos):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>`,
                     }),
                 });
-            } else if (!isSupabaseConfigured()) {
+            } else if (getDatabaseMode() === 'demo') {
                 // Only expose preview link in non-DB demo mode so flows remain testable without leaking production accounts
                 demoResetUrl = resetUrl;
             }

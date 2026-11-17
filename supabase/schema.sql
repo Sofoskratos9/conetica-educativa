@@ -147,6 +147,21 @@ CREATE INDEX IF NOT EXISTS idx_webhook_events_event_id ON webhook_events(event_i
 CREATE INDEX IF NOT EXISTS idx_webhook_events_processed ON webhook_events(processed);
 
 -- ============================================
+-- SCHOOLS INQUIRIES TABLE
+-- ============================================
+CREATE TABLE IF NOT EXISTS schools_inquiries (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  reference_id TEXT UNIQUE NOT NULL,
+  name TEXT NOT NULL,
+  school TEXT NOT NULL,
+  position TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT NOT NULL,
+  interest TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- ============================================
 -- ROW LEVEL SECURITY (RLS) POLICIES
 -- ============================================
 

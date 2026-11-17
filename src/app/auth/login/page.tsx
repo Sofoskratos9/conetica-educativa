@@ -100,7 +100,7 @@ function LoginForm() {
                             <button
                                 type="button"
                                 disabled={isLoading}
-                                onClick={() => handleQuickDemo("admin@coneticaeducativa.com")}
+                                onClick={() => handleQuickDemo("miguel.neftali95@gmail.com")}
                                 className="px-2.5 py-2 rounded-lg bg-white border border-blue-200 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition-colors"
                             >
                                 Admin

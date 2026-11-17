@@ -16,6 +16,7 @@ const PUBLIC_PREFIX_ROUTES = [
     '/api/webhooks',
     '/api/checkout',
     '/api/schools',
+    '/api/health',
 ];
 
 const ROLE_ROUTES: Record<string, string[]> = {
