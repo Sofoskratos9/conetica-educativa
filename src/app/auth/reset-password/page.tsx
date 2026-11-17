@@ -26,8 +26,8 @@ function ResetPasswordForm() {
             setError("Falta el token de recuperación. Solicita un enlace nuevo.");
             return;
         }
-        if (password.length < 6) {
-            setError("La nueva contraseña debe tener al menos 6 caracteres.");
+        if (password.length < 8 || !/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+            setError("La nueva contraseña debe tener al menos 8 caracteres, con letras y números.");
             return;
         }
         if (password !== confirmPassword) {
@@ -106,7 +106,7 @@ function ResetPasswordForm() {
                             type="password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Mínimo 6 caracteres"
+                            placeholder="Mín. 8 caracteres (letras y números)"
                             icon={<Lock size={18} />}
                             required
                         />

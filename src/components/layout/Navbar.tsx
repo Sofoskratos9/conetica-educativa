@@ -24,7 +24,7 @@ export function Navbar() {
     useEffect(() => {
         setUser(getCurrentUser());
         fetchServerSession().then((u) => {
-            if (u) setUser(u);
+            setUser(u);
         });
     }, [pathname]);
 

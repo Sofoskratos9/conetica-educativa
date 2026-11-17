@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { checkRateLimit, sanitizeInput } from '@/lib/security/sanitization';
+import { checkRateLimit, getClientIp, sanitizeInput } from '@/lib/security/sanitization';
 import { ensurePostgresSchema, getDatabaseMode, getPgPool } from '@/lib/db';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
@@ -8,14 +8,14 @@ const InquirySchema = z.object({
     name: z.string().min(2).max(120),
     school: z.string().min(2).max(160),
     position: z.string().min(2).max(100),
-    email: z.string().email(),
+    email: z.string().email().max(180),
     phone: z.string().min(8).max(20),
     interest: z.string().min(1).max(100),
 });
 
 export async function POST(request: NextRequest) {
     try {
-        const ip = request.headers.get('x-forwarded-for') || 'local';
+        const ip = getClientIp(request.headers);
         if (!checkRateLimit(`school-inquiry:${ip}`, 5, 60_000)) {
             return NextResponse.json(
                 { error: 'Demasiadas solicitudes. Intenta más tarde.' },

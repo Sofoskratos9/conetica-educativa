@@ -3,15 +3,15 @@ import { z } from 'zod';
 import { findUserByEmail } from '@/lib/auth-server';
 import { createPasswordResetToken } from '@/lib/session';
 import { getDatabaseMode } from '@/lib/db';
-import { checkRateLimit } from '@/lib/security/sanitization';
+import { checkRateLimit, getClientIp } from '@/lib/security/sanitization';
 
 const ForgotSchema = z.object({
-    email: z.string().email(),
+    email: z.string().email().max(180),
 });
 
 export async function POST(request: NextRequest) {
     try {
-        const ip = request.headers.get('x-forwarded-for') || 'local';
+        const ip = getClientIp(request.headers);
         if (!checkRateLimit(`forgot-pwd:${ip}`, 5, 60_000)) {
             return NextResponse.json(
                 { error: 'Demasiados intentos. Espera un minuto antes de volver a intentar.' },
@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
         let demoResetUrl: string | undefined;
 
         if (user) {
-            const token = await createPasswordResetToken(user.email);
+            const token = await createPasswordResetToken(user.email, user.passwordFingerprint);
             const appUrl =
                 process.env.NEXT_PUBLIC_APP_URL &&
                 !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
@@ -52,8 +52,11 @@ export async function POST(request: NextRequest) {
                     }),
                 });
             } else if (getDatabaseMode() === 'demo') {
-                // Only expose preview link in non-DB demo mode so flows remain testable without leaking production accounts
-                demoResetUrl = resetUrl;
+                // Only expose preview link for non-admin demo accounts in non-DB mode
+                const { PRIMARY_ADMIN_EMAIL } = await import('@/lib/db');
+                if (user.email !== PRIMARY_ADMIN_EMAIL) {
+                    demoResetUrl = resetUrl;
+                }
             }
         }
 

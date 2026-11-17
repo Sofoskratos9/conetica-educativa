@@ -1,4 +1,4 @@
-import { scryptSync, randomBytes, timingSafeEqual } from 'node:crypto';
+import { createHash, scryptSync, randomBytes, timingSafeEqual } from 'node:crypto';
 import { getSupabaseAdmin } from './supabase';
 import { SessionUser, UserRole } from './session';
 import {
@@ -12,6 +12,20 @@ interface StoredDemoUser extends SessionUser {
     passwordHash: string;
 }
 
+const LOCKED_PREFIX = 'locked:';
+const BLOCKED_WEAK_PASSWORDS = new Set([
+    'demo123',
+    'demo1234',
+    '123456',
+    '12345678',
+    '123456789',
+    'password',
+    'password1',
+    'admin123',
+    'qwerty123',
+    'conetica123',
+]);
+
 export function hashPassword(password: string): string {
     const salt = randomBytes(16).toString('hex');
     const derived = scryptSync(password, salt, 64).toString('hex');
@@ -19,12 +33,43 @@ export function hashPassword(password: string): string {
 }
 
 export function verifyPassword(password: string, storedHash: string): boolean {
-    if (!storedHash.includes(':')) return false;
+    if (!storedHash || storedHash.startsWith(LOCKED_PREFIX) || !storedHash.includes(':')) {
+        return false;
+    }
     const [salt, keyHex] = storedHash.split(':');
+    if (!salt || !keyHex) return false;
     const keyBuffer = Buffer.from(keyHex, 'hex');
     const derivedBuffer = scryptSync(password, salt, 64);
     if (keyBuffer.length !== derivedBuffer.length) return false;
     return timingSafeEqual(keyBuffer, derivedBuffer);
+}
+
+export function getPasswordFingerprint(storedHash: string): string {
+    return createHash('sha256').update(storedHash).digest('hex').slice(0, 16);
+}
+
+export function validateStrongPassword(password: string): string | null {
+    if (password.length < 8) {
+        return 'La contraseña debe tener al menos 8 caracteres.';
+    }
+    if (password.length > 128) {
+        return 'La contraseña excede la longitud máxima permitida.';
+    }
+    if (BLOCKED_WEAK_PASSWORDS.has(password.toLowerCase())) {
+        return 'Elige una contraseña más segura; esa contraseña común no está permitida.';
+    }
+    if (!/[A-Za-z]/.test(password) || !/[0-9]/.test(password)) {
+        return 'La contraseña debe incluir al menos una letra y un número.';
+    }
+    return null;
+}
+
+function getConfiguredAdminInitialPassword(): string {
+    const raw = process.env.ADMIN_INITIAL_PASSWORD?.trim() || '';
+    if (!raw || raw.includes('REPLACE_WITH') || raw.length < 8) {
+        return '';
+    }
+    return raw;
 }
 
 const globalForDemoUsers = globalThis as unknown as {
@@ -34,7 +79,12 @@ const globalForDemoUsers = globalThis as unknown as {
 
 function getDemoUsersStore(): StoredDemoUser[] {
     if (!globalForDemoUsers.__coneticaDemoUsers) {
-        const defaultHash = hashPassword('demo123');
+        const nonAdminDemoHash = hashPassword('demo123');
+        const adminPwd = getConfiguredAdminInitialPassword();
+        const adminHash = adminPwd
+            ? hashPassword(adminPwd)
+            : `${LOCKED_PREFIX}${hashPassword(randomBytes(32).toString('hex'))}`;
+
         globalForDemoUsers.__coneticaDemoUsers = [
             {
                 id: '00000000-0000-4000-8000-000000000001',
@@ -43,7 +93,7 @@ function getDemoUsersStore(): StoredDemoUser[] {
                 role: 'student',
                 createdAt: '2025-01-01T00:00:00.000Z',
                 isPremium: false,
-                passwordHash: defaultHash,
+                passwordHash: nonAdminDemoHash,
             },
             {
                 id: '00000000-0000-4000-8000-000000000002',
@@ -53,7 +103,7 @@ function getDemoUsersStore(): StoredDemoUser[] {
                 studentId: '00000000-0000-4000-8000-000000000001',
                 createdAt: '2025-01-01T00:00:00.000Z',
                 isPremium: false,
-                passwordHash: defaultHash,
+                passwordHash: nonAdminDemoHash,
             },
             {
                 id: '00000000-0000-4000-8000-000000000003',
@@ -62,7 +112,7 @@ function getDemoUsersStore(): StoredDemoUser[] {
                 role: 'admin',
                 createdAt: '2025-01-01T00:00:00.000Z',
                 isPremium: true,
-                passwordHash: defaultHash,
+                passwordHash: adminHash,
             },
             {
                 id: '00000000-0000-4000-8000-000000000004',
@@ -71,7 +121,7 @@ function getDemoUsersStore(): StoredDemoUser[] {
                 role: 'student',
                 createdAt: '2025-01-01T00:00:00.000Z',
                 isPremium: true,
-                passwordHash: defaultHash,
+                passwordHash: nonAdminDemoHash,
             },
         ];
     }
@@ -86,31 +136,36 @@ async function ensurePrimaryAdminProvisioned(): Promise<void> {
         return;
     }
 
-    const adminInitialPassword = process.env.ADMIN_INITIAL_PASSWORD;
+    const adminInitialPassword = getConfiguredAdminInitialPassword();
 
     if (mode === 'postgres') {
         await ensurePostgresSchema();
         const pool = getPgPool();
         if (!pool) return;
 
-        const existing = await pool.query<{ id: string; role: string }>(
-            'SELECT id, role FROM users WHERE email = $1 LIMIT 1',
+        const existing = await pool.query<{ id: string; role: string; password_hash: string }>(
+            'SELECT id, role, password_hash FROM users WHERE email = $1 LIMIT 1',
             [PRIMARY_ADMIN_EMAIL]
         );
 
         if (existing.rows.length > 0) {
-            if (existing.rows[0].role !== 'admin') {
+            const row = existing.rows[0];
+            if (row.role !== 'admin') {
                 await pool.query(
                     'UPDATE users SET role = $1, is_premium = true WHERE id = $2',
-                    ['admin', existing.rows[0].id]
+                    ['admin', row.id]
+                );
+            }
+            if (row.password_hash.startsWith(LOCKED_PREFIX) && adminInitialPassword) {
+                await pool.query(
+                    'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2',
+                    [hashPassword(adminInitialPassword), row.id]
                 );
             }
         } else {
-            // Only assign a usable password if ADMIN_INITIAL_PASSWORD is provided;
-            // otherwise create with a locked random hash so owner resets via email/env safely.
             const passwordHash = adminInitialPassword
                 ? hashPassword(adminInitialPassword)
-                : hashPassword(randomBytes(32).toString('hex'));
+                : `${LOCKED_PREFIX}${hashPassword(randomBytes(32).toString('hex'))}`;
 
             await pool.query(
                 `INSERT INTO users (email, name, password_hash, role, is_premium)
@@ -128,7 +183,7 @@ async function ensurePrimaryAdminProvisioned(): Promise<void> {
         const supabase = getSupabaseAdmin();
         const { data: existing } = await supabase
             .from('users')
-            .select('id, role')
+            .select('id, role, password_hash')
             .eq('email', PRIMARY_ADMIN_EMAIL)
             .maybeSingle();
 
@@ -139,10 +194,20 @@ async function ensurePrimaryAdminProvisioned(): Promise<void> {
                     .update({ role: 'admin', is_premium: true })
                     .eq('id', existing.id);
             }
+            if (
+                typeof existing.password_hash === 'string' &&
+                existing.password_hash.startsWith(LOCKED_PREFIX) &&
+                adminInitialPassword
+            ) {
+                await supabase
+                    .from('users')
+                    .update({ password_hash: hashPassword(adminInitialPassword) })
+                    .eq('id', existing.id);
+            }
         } else {
             const passwordHash = adminInitialPassword
                 ? hashPassword(adminInitialPassword)
-                : hashPassword(randomBytes(32).toString('hex'));
+                : `${LOCKED_PREFIX}${hashPassword(randomBytes(32).toString('hex'))}`;
 
             await supabase.from('users').insert({
                 email: PRIMARY_ADMIN_EMAIL,
@@ -240,6 +305,15 @@ export async function registerUserAccount(params: {
     role: 'student' | 'parent';
 }): Promise<{ user?: SessionUser; error?: string }> {
     const normalizedEmail = params.email.toLowerCase().trim();
+    if (normalizedEmail === PRIMARY_ADMIN_EMAIL) {
+        return { error: 'No es posible registrar este correo electrónico.' };
+    }
+
+    const passwordError = validateStrongPassword(params.password);
+    if (passwordError) {
+        return { error: passwordError };
+    }
+
     const mode = getDatabaseMode();
 
     await ensurePrimaryAdminProvisioned();
@@ -360,7 +434,7 @@ export async function registerUserAccount(params: {
 
 export async function findUserByEmail(
     email: string
-): Promise<{ id: string; email: string; name: string } | null> {
+): Promise<{ id: string; email: string; name: string; passwordFingerprint: string } | null> {
     const normalizedEmail = email.toLowerCase().trim();
     const mode = getDatabaseMode();
 
@@ -369,34 +443,67 @@ export async function findUserByEmail(
     if (mode === 'postgres') {
         const pool = getPgPool();
         if (!pool) return null;
-        const res = await pool.query<{ id: string; email: string; name: string }>(
-            'SELECT id, email, name FROM users WHERE email = $1 LIMIT 1',
+        const res = await pool.query<{ id: string; email: string; name: string; password_hash: string }>(
+            'SELECT id, email, name, password_hash FROM users WHERE email = $1 LIMIT 1',
             [normalizedEmail]
         );
-        return res.rows[0] || null;
+        const row = res.rows[0];
+        return row
+            ? {
+                  id: row.id,
+                  email: row.email,
+                  name: row.name,
+                  passwordFingerprint: getPasswordFingerprint(row.password_hash),
+              }
+            : null;
     }
 
     if (mode === 'supabase') {
         const supabase = getSupabaseAdmin();
         const { data } = await supabase
             .from('users')
-            .select('id, email, name')
+            .select('id, email, name, password_hash')
             .eq('email', normalizedEmail)
             .maybeSingle();
 
-        return data ? { id: data.id, email: data.email, name: data.name } : null;
+        return data
+            ? {
+                  id: data.id,
+                  email: data.email,
+                  name: data.name,
+                  passwordFingerprint: getPasswordFingerprint(data.password_hash),
+              }
+            : null;
     }
 
     const demoUser = getDemoUsersStore().find((u) => u.email === normalizedEmail);
-    return demoUser ? { id: demoUser.id, email: demoUser.email, name: demoUser.name } : null;
+    return demoUser
+        ? {
+              id: demoUser.id,
+              email: demoUser.email,
+              name: demoUser.name,
+              passwordFingerprint: getPasswordFingerprint(demoUser.passwordHash),
+          }
+        : null;
 }
 
-export async function updateUserPassword(email: string, newPassword: string): Promise<boolean> {
+export async function updateUserPassword(
+    email: string,
+    newPassword: string,
+    expectedFingerprint?: string
+): Promise<boolean> {
     const normalizedEmail = email.toLowerCase().trim();
     const newHash = hashPassword(newPassword);
     const mode = getDatabaseMode();
 
     await ensurePrimaryAdminProvisioned();
+
+    if (expectedFingerprint) {
+        const current = await findUserByEmail(normalizedEmail);
+        if (!current || current.passwordFingerprint !== expectedFingerprint) {
+            return false;
+        }
+    }
 
     if (mode === 'postgres') {
         const pool = getPgPool();
@@ -424,4 +531,36 @@ export async function updateUserPassword(email: string, newPassword: string): Pr
     if (!demoUser) return false;
     demoUser.passwordHash = newHash;
     return true;
+}
+
+const failedLoginStore = new Map<string, { count: number; blockedUntil: number }>();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+export function isLoginBlocked(email: string, ip: string): boolean {
+    const key = `${email.toLowerCase().trim()}:${ip}`;
+    const entry = failedLoginStore.get(key);
+    if (!entry) return false;
+    if (Date.now() > entry.blockedUntil && entry.count >= MAX_FAILED_ATTEMPTS) {
+        failedLoginStore.delete(key);
+        return false;
+    }
+    return entry.count >= MAX_FAILED_ATTEMPTS && Date.now() <= entry.blockedUntil;
+}
+
+export function recordFailedLogin(email: string, ip: string): void {
+    const key = `${email.toLowerCase().trim()}:${ip}`;
+    const now = Date.now();
+    const current = failedLoginStore.get(key);
+    if (!current || now > current.blockedUntil) {
+        failedLoginStore.set(key, { count: 1, blockedUntil: now + LOCKOUT_WINDOW_MS });
+        return;
+    }
+    current.count += 1;
+    current.blockedUntil = now + LOCKOUT_WINDOW_MS;
+}
+
+export function clearFailedLogins(email: string, ip: string): void {
+    const key = `${email.toLowerCase().trim()}:${ip}`;
+    failedLoginStore.delete(key);
 }

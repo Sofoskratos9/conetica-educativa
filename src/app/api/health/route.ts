@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import {
-    PRIMARY_ADMIN_EMAIL,
     ensurePostgresSchema,
     getDatabaseMode,
     getPgPool,
@@ -18,7 +17,7 @@ export async function GET() {
                 status: 'ok',
                 database: 'postgres',
                 persistent: true,
-                adminEmail: PRIMARY_ADMIN_EMAIL,
+                demoMode: false,
             });
         } catch {
             return NextResponse.json(
@@ -26,7 +25,8 @@ export async function GET() {
                     status: 'error',
                     database: 'postgres',
                     persistent: false,
-                    error: 'Error conectando con PostgreSQL. Revisa DATABASE_URL.',
+                    demoMode: false,
+                    error: 'Error conectando con la base de datos.',
                 },
                 { status: 500 }
             );
@@ -37,6 +37,6 @@ export async function GET() {
         status: 'ok',
         database: mode,
         persistent: mode === 'supabase',
-        adminEmail: PRIMARY_ADMIN_EMAIL,
+        demoMode: mode === 'demo',
     });
 }

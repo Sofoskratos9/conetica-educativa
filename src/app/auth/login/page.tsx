@@ -1,11 +1,21 @@
 "use client";
 
-import { useState, Suspense } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
-import { Mail, Lock, AlertCircle, Compass, ArrowLeft, Sparkles } from "lucide-react";
+import {
+    Mail,
+    Lock,
+    AlertCircle,
+    Compass,
+    ArrowLeft,
+    Sparkles,
+    Eye,
+    EyeOff,
+    ShieldCheck,
+} from "lucide-react";
 import { login, getRedirectPath } from "@/lib/auth-service";
 
 function LoginForm() {
@@ -15,23 +25,40 @@ function LoginForm() {
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState("");
     const [isLoading, setIsLoading] = useState(false);
+    const [isDemoMode, setIsDemoMode] = useState(false);
+
+    useEffect(() => {
+        fetch("/api/health", { cache: "no-store" })
+            .then((r) => r.json())
+            .then((d) => {
+                if (d?.demoMode === true) {
+                    setIsDemoMode(true);
+                }
+            })
+            .catch(() => {
+                // Keep demo buttons hidden if health check fails
+            });
+    }, []);
 
     const submitCredentials = async (targetEmail: string, targetPassword: string) => {
         setError("");
         setIsLoading(true);
         try {
-            const session = await login(targetEmail, targetPassword);
-            if (!session) {
-                setError("Credenciales inválidas. Verifica tu correo y contraseña.");
+            const result = await login(targetEmail, targetPassword);
+            if (!result.session) {
+                setError(
+                    result.error || "Credenciales inválidas. Verifica tu correo y contraseña."
+                );
                 setIsLoading(false);
                 return;
             }
             const safeRedirect =
                 redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
                     ? redirectParam
-                    : getRedirectPath(session.user.role);
+                    : getRedirectPath(result.session.user.role);
             router.push(safeRedirect);
             router.refresh();
         } catch {
@@ -45,7 +72,7 @@ function LoginForm() {
         await submitCredentials(email, password);
     };
 
-    const handleQuickDemo = async (demoEmail: string) => {
+    const handleQuickDemo = async (demoEmail: "estudiante@example.com" | "padre@example.com") => {
         setEmail(demoEmail);
         setPassword("demo123");
         await submitCredentials(demoEmail, "demo123");
@@ -74,39 +101,33 @@ function LoginForm() {
                         </div>
                     )}
 
-                    {/* Quick Demo Access */}
-                    <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-xl space-y-3">
-                        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-900">
-                            <Sparkles size={14} className="text-blue-600" />
-                            <span>Acceso Rápido Demo (1 clic)</span>
+                    {/* Quick Demo Access (only shown in non-DB demo mode, never exposes admin) */}
+                    {isDemoMode && (
+                        <div className="p-4 bg-blue-50/80 border border-blue-200 rounded-xl space-y-3">
+                            <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-blue-900">
+                                <Sparkles size={14} className="text-blue-600" />
+                                <span>Explorar Vista Demo (1 clic)</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    type="button"
+                                    disabled={isLoading}
+                                    onClick={() => handleQuickDemo("estudiante@example.com")}
+                                    className="px-3 py-2 rounded-lg bg-white border border-blue-200 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition-colors"
+                                >
+                                    Demo Estudiante
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={isLoading}
+                                    onClick={() => handleQuickDemo("padre@example.com")}
+                                    className="px-3 py-2 rounded-lg bg-white border border-blue-200 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition-colors"
+                                >
+                                    Demo Padre/Tutor
+                                </button>
+                            </div>
                         </div>
-                        <div className="grid grid-cols-3 gap-2">
-                            <button
-                                type="button"
-                                disabled={isLoading}
-                                onClick={() => handleQuickDemo("estudiante@example.com")}
-                                className="px-2.5 py-2 rounded-lg bg-white border border-blue-200 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition-colors"
-                            >
-                                Estudiante
-                            </button>
-                            <button
-                                type="button"
-                                disabled={isLoading}
-                                onClick={() => handleQuickDemo("padre@example.com")}
-                                className="px-2.5 py-2 rounded-lg bg-white border border-blue-200 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition-colors"
-                            >
-                                Padre/Tutor
-                            </button>
-                            <button
-                                type="button"
-                                disabled={isLoading}
-                                onClick={() => handleQuickDemo("miguel.neftali95@gmail.com")}
-                                className="px-2.5 py-2 rounded-lg bg-white border border-blue-200 text-xs font-semibold text-blue-900 hover:bg-blue-100 transition-colors"
-                            >
-                                Admin
-                            </button>
-                        </div>
-                    </div>
+                    )}
 
                     <form onSubmit={handleSubmit} className="space-y-5">
                         <Input
@@ -115,20 +136,33 @@ function LoginForm() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="tu@correo.com"
+                            autoComplete="email"
                             icon={<Mail size={18} />}
                             required
                         />
 
                         <div>
-                            <Input
-                                label="Contraseña"
-                                type="password"
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                placeholder="••••••••"
-                                icon={<Lock size={18} />}
-                                required
-                            />
+                            <div className="relative">
+                                <Input
+                                    label="Contraseña"
+                                    type={showPassword ? "text" : "password"}
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    placeholder="••••••••"
+                                    autoComplete="current-password"
+                                    icon={<Lock size={18} />}
+                                    className="pr-10"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword((prev) => !prev)}
+                                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                                    className="absolute right-3 top-[38px] text-slate-400 hover:text-slate-600"
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            </div>
                             <div className="flex justify-end mt-2">
                                 <Link
                                     href="/auth/forgot-password"
@@ -143,6 +177,11 @@ function LoginForm() {
                             Iniciar Sesión
                         </Button>
                     </form>
+
+                    <div className="flex items-center justify-center gap-2 text-xs text-slate-500 pt-1">
+                        <ShieldCheck size={14} className="text-emerald-600" />
+                        <span>Sesión cifrada y protección contra fuerza bruta activa</span>
+                    </div>
 
                     <p className="text-center text-sm text-slate-600">
                         ¿No tienes cuenta?{" "}
@@ -169,11 +208,11 @@ function LoginForm() {
                     <div className="space-y-3 pt-2 text-sm text-slate-200">
                         <div className="flex items-center gap-3">
                             <span className="w-2 h-2 bg-emerald-400 rounded-full" />
-                            <span>Sesiones firmadas y protegidas</span>
+                            <span>Sesiones firmadas y cookies HttpOnly protegidas</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="w-2 h-2 bg-emerald-400 rounded-full" />
-                            <span>Panel dedicado para estudiantes, padres y admin</span>
+                            <span>Panel privado por rol y filtros anti-CSRF/XSS</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <span className="w-2 h-2 bg-emerald-400 rounded-full" />

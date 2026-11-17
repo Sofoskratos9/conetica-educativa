@@ -68,21 +68,28 @@ export const PROTECTED_ROUTES: Record<string, UserRole[]> = {
     '/admin/blog': ['admin']
 };
 
-export async function login(email: string, password: string): Promise<AuthSession | null> {
+export async function login(
+    email: string,
+    password: string
+): Promise<{ session?: AuthSession; error?: string }> {
     const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
     });
 
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
-        return null;
+        return {
+            error:
+                data.error ||
+                'Credenciales inválidas. Verifica tu correo y contraseña.',
+        };
     }
 
-    const data = await res.json();
     const session: AuthSession = { user: data.user };
     saveSession(session);
-    return session;
+    return { session };
 }
 
 export async function register(params: {

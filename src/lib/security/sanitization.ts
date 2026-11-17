@@ -99,6 +99,18 @@ export function sanitizeJson<T>(input: string, schema: z.ZodSchema<T>): T {
     }
 }
 
+// Extract first client IP safely behind reverse proxies
+export function getClientIp(headers: { get(name: string): string | null }): string {
+    const forwarded = headers.get('x-forwarded-for');
+    if (forwarded) {
+        const firstIp = forwarded.split(',')[0]?.trim();
+        if (firstIp) return firstIp;
+    }
+    const realIp = headers.get('x-real-ip')?.trim();
+    if (realIp) return realIp;
+    return 'local';
+}
+
 // Rate limiting helper (simple in-memory implementation)
 const rateLimitMap = new Map<string, { count: number; resetTime: number }>();
 

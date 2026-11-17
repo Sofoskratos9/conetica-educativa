@@ -1,20 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { authenticateUser } from '@/lib/auth-server';
+import {
+    authenticateUser,
+    clearFailedLogins,
+    isLoginBlocked,
+    recordFailedLogin,
+} from '@/lib/auth-server';
 import { createSessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
-import { checkRateLimit } from '@/lib/security/sanitization';
+import { checkRateLimit, getClientIp } from '@/lib/security/sanitization';
 
 const LoginSchema = z.object({
-    email: z.string().email('Correo electrónico inválido'),
-    password: z.string().min(4, 'Contraseña requerida'),
+    email: z.string().email('Correo electrónico inválido').max(180),
+    password: z.string().min(4, 'Contraseña requerida').max(128),
 });
 
 export async function POST(request: NextRequest) {
     try {
-        const ip = request.headers.get('x-forwarded-for') || 'local';
-        if (!checkRateLimit(`login:${ip}`, 20, 60_000)) {
+        const ip = getClientIp(request.headers);
+        if (!checkRateLimit(`login:${ip}`, 15, 60_000)) {
             return NextResponse.json(
-                { error: 'Demasiados intentos. Por favor espera un minuto.' },
+                { error: 'Demasiados intentos desde tu red. Espera un minuto antes de reintentar.' },
                 { status: 429 }
             );
         }
@@ -22,14 +27,23 @@ export async function POST(request: NextRequest) {
         const body = await request.json();
         const { email, password } = LoginSchema.parse(body);
 
+        if (isLoginBlocked(email, ip)) {
+            return NextResponse.json(
+                { error: 'Cuenta temporalmente bloqueada por demasiados intentos fallidos. Espera 15 minutos.' },
+                { status: 429 }
+            );
+        }
+
         const user = await authenticateUser(email, password);
         if (!user) {
+            recordFailedLogin(email, ip);
             return NextResponse.json(
                 { error: 'Credenciales inválidas' },
                 { status: 401 }
             );
         }
 
+        clearFailedLogins(email, ip);
         const token = await createSessionToken(user);
         const response = NextResponse.json({ user });
 

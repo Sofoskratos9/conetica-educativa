@@ -13,10 +13,12 @@ export interface SessionUser {
 export interface SignedSessionPayload {
     user: SessionUser;
     exp: number; // Unix epoch ms
+    iss?: string;
 }
 
 export const SESSION_COOKIE_NAME = 'auth_session';
 const SESSION_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const TOKEN_ISSUER = 'conetica-educativa';
 
 function getSecret(): string {
     return (
@@ -59,6 +61,7 @@ export async function createSessionToken(user: SessionUser): Promise<string> {
     const payload: SignedSessionPayload = {
         user,
         exp: Date.now() + SESSION_TTL_MS,
+        iss: TOKEN_ISSUER,
     };
     const encoder = new TextEncoder();
     const encodedPayload = toBase64Url(encoder.encode(JSON.stringify(payload)));
@@ -98,7 +101,12 @@ export async function verifySessionToken(token: string | undefined | null): Prom
         const payloadJson = new TextDecoder().decode(fromBase64Url(encodedPayload));
         const parsed = JSON.parse(payloadJson) as SignedSessionPayload;
 
-        if (!parsed?.user?.role || !parsed?.exp || Date.now() > parsed.exp) {
+        if (
+            !parsed?.user?.role ||
+            !parsed?.exp ||
+            Date.now() > parsed.exp ||
+            (parsed.iss && parsed.iss !== TOKEN_ISSUER)
+        ) {
             return null;
         }
 
@@ -112,15 +120,22 @@ interface PasswordResetPayload {
     email: string;
     purpose: 'password-reset';
     exp: number;
+    iss: string;
+    fp?: string;
 }
 
 const RESET_TTL_MS = 30 * 60 * 1000; // 30 minutes
 
-export async function createPasswordResetToken(email: string): Promise<string> {
+export async function createPasswordResetToken(
+    email: string,
+    passwordFingerprint?: string
+): Promise<string> {
     const payload: PasswordResetPayload = {
         email: email.toLowerCase().trim(),
         purpose: 'password-reset',
         exp: Date.now() + RESET_TTL_MS,
+        iss: TOKEN_ISSUER,
+        ...(passwordFingerprint ? { fp: passwordFingerprint } : {}),
     };
     const encoder = new TextEncoder();
     const encodedPayload = toBase64Url(encoder.encode(JSON.stringify(payload)));
@@ -134,7 +149,9 @@ export async function createPasswordResetToken(email: string): Promise<string> {
     return `${encodedPayload}.${encodedSig}`;
 }
 
-export async function verifyPasswordResetToken(token: string | undefined | null): Promise<string | null> {
+export async function verifyPasswordResetToken(
+    token: string | undefined | null
+): Promise<{ email: string; fp?: string } | null> {
     if (!token || !token.includes('.')) return null;
     const parts = token.split('.');
     if (parts.length !== 2) return null;
@@ -157,6 +174,7 @@ export async function verifyPasswordResetToken(token: string | undefined | null)
 
         if (
             parsed?.purpose !== 'password-reset' ||
+            parsed?.iss !== TOKEN_ISSUER ||
             typeof parsed?.email !== 'string' ||
             !parsed?.exp ||
             Date.now() > parsed.exp
@@ -164,7 +182,7 @@ export async function verifyPasswordResetToken(token: string | undefined | null)
             return null;
         }
 
-        return parsed.email;
+        return { email: parsed.email, fp: parsed.fp };
     } catch {
         return null;
     }

@@ -2,18 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { registerUserAccount } from '@/lib/auth-server';
 import { createSessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
-import { checkRateLimit, sanitizeInput } from '@/lib/security/sanitization';
+import { checkRateLimit, getClientIp, sanitizeInput } from '@/lib/security/sanitization';
 
 const RegisterSchema = z.object({
     name: z.string().min(2, 'Nombre requerido').max(120),
-    email: z.string().email('Correo electrónico inválido'),
-    password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').max(100),
+    email: z.string().email('Correo electrónico inválido').max(180),
+    password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres').max(128),
     role: z.enum(['student', 'parent']),
 });
 
 export async function POST(request: NextRequest) {
     try {
-        const ip = request.headers.get('x-forwarded-for') || 'local';
+        const ip = getClientIp(request.headers);
         if (!checkRateLimit(`register:${ip}`, 10, 60_000)) {
             return NextResponse.json(
                 { error: 'Demasiadas solicitudes. Por favor espera un minuto.' },

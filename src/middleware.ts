@@ -25,14 +25,31 @@ const ROLE_ROUTES: Record<string, string[]> = {
     admin: ['/admin', '/dashboard', '/parent'],
 };
 
+const BLOCKED_PROBE_PATTERNS = [
+    '/.env',
+    '/.git',
+    '/wp-admin',
+    '/wp-login.php',
+    '/xmlrpc.php',
+    '/phpmyadmin',
+];
+
 function applySecurityHeaders(response: NextResponse): NextResponse {
     response.headers.set('X-Frame-Options', 'DENY');
     response.headers.set('X-Content-Type-Options', 'nosniff');
+    response.headers.set('X-XSS-Protection', '1; mode=block');
+    response.headers.set('X-Permitted-Cross-Domain-Policies', 'none');
+    response.headers.set('Cross-Origin-Opener-Policy', 'same-origin');
+    response.headers.set('Cross-Origin-Resource-Policy', 'same-origin');
     response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=()');
+    response.headers.set(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains; preload'
+    );
     response.headers.set(
         'Content-Security-Policy',
-        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.mercadopago.com;"
+        "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://*.supabase.co https://api.stripe.com https://api.mercadopago.com; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none';"
     );
     return response;
 }
@@ -44,8 +61,46 @@ function isPublicRoute(pathname: string): boolean {
     );
 }
 
+function isCrossSiteStateChange(request: NextRequest): boolean {
+    const method = request.method.toUpperCase();
+    if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') {
+        return false;
+    }
+    const { pathname } = request.nextUrl;
+    if (!pathname.startsWith('/api/') || pathname.startsWith('/api/webhooks/')) {
+        return false;
+    }
+    const origin = request.headers.get('origin');
+    if (!origin) {
+        return false;
+    }
+    const expectedHost =
+        request.headers.get('x-forwarded-host') ||
+        request.headers.get('host') ||
+        request.nextUrl.host;
+    try {
+        const originHost = new URL(origin).host;
+        return Boolean(expectedHost) && originHost !== expectedHost;
+    } catch {
+        return true;
+    }
+}
+
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
+    const lowerPath = pathname.toLowerCase();
+
+    // Block common vulnerability scanner / dotfile probes immediately
+    if (BLOCKED_PROBE_PATTERNS.some((p) => lowerPath === p || lowerPath.startsWith(`${p}/`) || lowerPath.startsWith(`${p}.`))) {
+        return applySecurityHeaders(new NextResponse('Not Found', { status: 404 }));
+    }
+
+    // Block cross-origin state-changing API requests (CSRF protection)
+    if (isCrossSiteStateChange(request)) {
+        return applySecurityHeaders(
+            NextResponse.json({ error: 'Origen de solicitud no autorizado.' }, { status: 403 })
+        );
+    }
 
     // Allow static files and Next.js internals
     if (
