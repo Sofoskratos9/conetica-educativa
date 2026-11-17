@@ -1,5 +1,5 @@
-# Supabase Database Schema for Conética Educativa™
-# Run this SQL in your Supabase SQL Editor
+-- Supabase Database Schema for Conética Educativa™
+-- Run this SQL in your Supabase SQL Editor
 
 -- ============================================
 -- USERS TABLE

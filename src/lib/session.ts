@@ -107,3 +107,65 @@ export async function verifySessionToken(token: string | undefined | null): Prom
         return null;
     }
 }
+
+interface PasswordResetPayload {
+    email: string;
+    purpose: 'password-reset';
+    exp: number;
+}
+
+const RESET_TTL_MS = 30 * 60 * 1000; // 30 minutes
+
+export async function createPasswordResetToken(email: string): Promise<string> {
+    const payload: PasswordResetPayload = {
+        email: email.toLowerCase().trim(),
+        purpose: 'password-reset',
+        exp: Date.now() + RESET_TTL_MS,
+    };
+    const encoder = new TextEncoder();
+    const encodedPayload = toBase64Url(encoder.encode(JSON.stringify(payload)));
+    const key = await importHmacKey();
+    const signatureBuffer = await globalThis.crypto.subtle.sign(
+        'HMAC',
+        key,
+        encoder.encode(encodedPayload)
+    );
+    const encodedSig = toBase64Url(new Uint8Array(signatureBuffer));
+    return `${encodedPayload}.${encodedSig}`;
+}
+
+export async function verifyPasswordResetToken(token: string | undefined | null): Promise<string | null> {
+    if (!token || !token.includes('.')) return null;
+    const parts = token.split('.');
+    if (parts.length !== 2) return null;
+    const [encodedPayload, encodedSig] = parts;
+
+    try {
+        const encoder = new TextEncoder();
+        const key = await importHmacKey();
+        const sigBytes = fromBase64Url(encodedSig);
+        const valid = await globalThis.crypto.subtle.verify(
+            'HMAC',
+            key,
+            sigBytes.buffer as ArrayBuffer,
+            encoder.encode(encodedPayload)
+        );
+        if (!valid) return null;
+
+        const payloadJson = new TextDecoder().decode(fromBase64Url(encodedPayload));
+        const parsed = JSON.parse(payloadJson) as PasswordResetPayload;
+
+        if (
+            parsed?.purpose !== 'password-reset' ||
+            typeof parsed?.email !== 'string' ||
+            !parsed?.exp ||
+            Date.now() > parsed.exp
+        ) {
+            return null;
+        }
+
+        return parsed.email;
+    } catch {
+        return null;
+    }
+}

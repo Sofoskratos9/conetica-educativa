@@ -32,7 +32,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
         type: 'success',
         timestamp: 'Hace 2 horas',
         read: false,
-        actionLink: '/dashboard',
+        actionLink: '/dashboard/diagnostic',
         icon: Star
     },
     {
@@ -43,7 +43,7 @@ export const MOCK_NOTIFICATIONS: Notification[] = [
         type: 'info',
         timestamp: 'Hace 1 día',
         read: true,
-        actionLink: '/dashboard',
+        actionLink: '/dashboard/study-plan',
         icon: BookOpen
     },
     {

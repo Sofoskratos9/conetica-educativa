@@ -119,15 +119,25 @@ function LoginForm() {
                             required
                         />
 
-                        <Input
-                            label="Contraseña"
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="••••••••"
-                            icon={<Lock size={18} />}
-                            required
-                        />
+                        <div>
+                            <Input
+                                label="Contraseña"
+                                type="password"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                placeholder="••••••••"
+                                icon={<Lock size={18} />}
+                                required
+                            />
+                            <div className="flex justify-end mt-2">
+                                <Link
+                                    href="/auth/forgot-password"
+                                    className="text-xs font-semibold text-[var(--color-brand-600)] hover:underline"
+                                >
+                                    ¿Olvidaste tu contraseña?
+                                </Link>
+                            </div>
+                        </div>
 
                         <Button type="submit" className="w-full py-3.5" isLoading={isLoading}>
                             Iniciar Sesión

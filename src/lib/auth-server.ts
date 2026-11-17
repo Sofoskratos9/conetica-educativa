@@ -190,3 +190,43 @@ export async function registerUserAccount(params: {
         },
     };
 }
+
+export async function findUserByEmail(email: string): Promise<{ id: string; email: string; name: string } | null> {
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (isSupabaseConfigured()) {
+        const supabase = getSupabaseAdmin();
+        const { data } = await supabase
+            .from('users')
+            .select('id, email, name')
+            .eq('email', normalizedEmail)
+            .maybeSingle();
+
+        return data ? { id: data.id, email: data.email, name: data.name } : null;
+    }
+
+    const demoUser = getDemoUsersStore().find((u) => u.email === normalizedEmail);
+    return demoUser ? { id: demoUser.id, email: demoUser.email, name: demoUser.name } : null;
+}
+
+export async function updateUserPassword(email: string, newPassword: string): Promise<boolean> {
+    const normalizedEmail = email.toLowerCase().trim();
+    const newHash = hashPassword(newPassword);
+
+    if (isSupabaseConfigured()) {
+        const supabase = getSupabaseAdmin();
+        const { data, error } = await supabase
+            .from('users')
+            .update({ password_hash: newHash })
+            .eq('email', normalizedEmail)
+            .select('id')
+            .maybeSingle();
+
+        return !error && Boolean(data);
+    }
+
+    const demoUser = getDemoUsersStore().find((u) => u.email === normalizedEmail);
+    if (!demoUser) return false;
+    demoUser.passwordHash = newHash;
+    return true;
+}
