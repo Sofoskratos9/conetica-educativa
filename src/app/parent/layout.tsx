@@ -17,7 +17,7 @@ export default function ParentLayout({
     useEffect(() => {
         setUser(getCurrentUser());
         fetchServerSession().then((u) => {
-            if (u) setUser(u);
+            setUser(u);
         });
     }, []);
 
@@ -62,7 +62,7 @@ export default function ParentLayout({
                         <div className="flex items-center gap-3">
                             <div className="text-sm text-right hidden sm:block">
                                 <div className="font-semibold text-slate-900">
-                                    {user?.name || "Familia López"}
+                                    {user?.name || "Padre / Tutor"}
                                 </div>
                                 <div className="text-xs text-slate-500">Portal de Padres / Tutor</div>
                             </div>

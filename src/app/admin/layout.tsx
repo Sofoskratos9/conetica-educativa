@@ -31,7 +31,7 @@ export default function AdminLayout({
     useEffect(() => {
         setUser(getCurrentUser());
         fetchServerSession().then((u) => {
-            if (u) setUser(u);
+            setUser(u);
         });
     }, []);
 

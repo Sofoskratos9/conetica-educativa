@@ -17,7 +17,11 @@ const jakarta = Plus_Jakarta_Sans({
   display: "swap",
 });
 
+const SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL || "https://conetica-educativa.vercel.app";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Conética Educativa™ | Aprendizaje Basado en Evidencia Científica",
     template: "%s | Conética Educativa™",
@@ -32,6 +36,30 @@ export const metadata: Metadata = {
     "Técnicas de estudio",
     "Aguascalientes",
   ],
+  openGraph: {
+    type: "website",
+    locale: "es_MX",
+    url: SITE_URL,
+    siteName: "Conética Educativa™",
+    title: "Conética Educativa™ | Aprendizaje Basado en Evidencia Científica",
+    description:
+      "Diagnóstico académico, simuladores EXANI-II, orientación vocacional RIASEC y bienestar académico para estudiantes, familias y escuelas.",
+    images: [
+      {
+        url: "/images/hero-illustration.jpg",
+        width: 1200,
+        height: 675,
+        alt: "Conética Educativa™ — Aprendizaje basado en evidencia científica",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Conética Educativa™ | Aprendizaje Basado en Evidencia Científica",
+    description:
+      "Diagnóstico académico, simuladores EXANI-II y orientación vocacional RIASEC.",
+    images: ["/images/hero-illustration.jpg"],
+  },
 };
 
 export default function RootLayout({

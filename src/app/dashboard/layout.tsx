@@ -17,6 +17,7 @@ import {
     Menu,
     X,
     Sparkles,
+    ShieldCheck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
@@ -35,7 +36,7 @@ export default function DashboardLayout({
     useEffect(() => {
         setUser(getCurrentUser());
         fetchServerSession().then((u) => {
-            if (u) setUser(u);
+            setUser(u);
         });
     }, []);
 
@@ -145,6 +146,16 @@ export default function DashboardLayout({
                 )}
 
                 <div className="p-4 border-t border-slate-100 space-y-1">
+                    {user?.role === "admin" && (
+                        <Link
+                            href="/admin/analytics"
+                            onClick={() => setIsSidebarOpen(false)}
+                            className="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-emerald-700 bg-emerald-50 hover:bg-emerald-100 transition-colors"
+                        >
+                            <ShieldCheck size={19} className="text-emerald-600" />
+                            Consola Admin
+                        </Link>
+                    )}
                     <Link
                         href="/dashboard/settings"
                         onClick={() => setIsSidebarOpen(false)}

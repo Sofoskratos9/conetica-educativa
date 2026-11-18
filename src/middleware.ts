@@ -86,6 +86,17 @@ function isCrossSiteStateChange(request: NextRequest): boolean {
     }
 }
 
+const PROTECTED_PREFIXES = ['/dashboard', '/parent', '/admin'];
+
+function isProtectedPath(pathname: string): boolean {
+    if (pathname.startsWith('/api/') && !isPublicRoute(pathname)) {
+        return true;
+    }
+    return PROTECTED_PREFIXES.some(
+        (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
+}
+
 export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
     const lowerPath = pathname.toLowerCase();
@@ -107,21 +118,28 @@ export async function middleware(request: NextRequest) {
         pathname.startsWith('/_next') ||
         pathname.startsWith('/static') ||
         pathname.startsWith('/images') ||
+        pathname === '/robots.txt' ||
+        pathname === '/sitemap.xml' ||
         pathname.includes('.')
     ) {
         return NextResponse.next();
     }
 
-    // Allow public routes with security headers
-    if (isPublicRoute(pathname)) {
+    // Allow public routes and non-protected paths (unknown URLs hit branded 404) with security headers
+    if (isPublicRoute(pathname) || !isProtectedPath(pathname)) {
         return applySecurityHeaders(NextResponse.next());
     }
 
-    // Verify signed HMAC session cookie
+    // Verify signed HMAC session cookie for protected dashboards, admin, and private APIs
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME);
     const verifiedSession = await verifySessionToken(sessionCookie?.value);
 
     if (!verifiedSession) {
+        if (pathname.startsWith('/api/')) {
+            return applySecurityHeaders(
+                NextResponse.json({ error: 'No autenticado.' }, { status: 401 })
+            );
+        }
         const loginUrl = new URL('/auth/login', request.url);
         loginUrl.searchParams.set('redirect', pathname);
         const redirectRes = NextResponse.redirect(loginUrl);

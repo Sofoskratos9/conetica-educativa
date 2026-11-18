@@ -15,8 +15,18 @@ export interface WhatsAppTemplate {
     template: (data: any) => string;
 }
 
-// Your WhatsApp Business Number (to be configured)
-export const WHATSAPP_BUSINESS_NUMBER = '5214491234567'; // Replace with actual number
+// Your WhatsApp Business Number (set NEXT_PUBLIC_WHATSAPP_NUMBER in Vercel, e.g. 521449XXXXXXX)
+const RAW_WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '')
+    .replace(/\D/g, '');
+
+export const WHATSAPP_BUSINESS_NUMBER =
+    RAW_WHATSAPP_NUMBER && RAW_WHATSAPP_NUMBER !== '5214491234567'
+        ? RAW_WHATSAPP_NUMBER
+        : '';
+
+export function isWhatsAppBusinessConfigured(): boolean {
+    return Boolean(WHATSAPP_BUSINESS_NUMBER);
+}
 
 // Message Templates
 export const WHATSAPP_TEMPLATES: WhatsAppTemplate[] = [
@@ -94,8 +104,13 @@ export function generateWhatsAppURL(phoneNumber: string, message: string): strin
     return `https://wa.me/${cleanPhone}?text=${encodedMessage}`;
 }
 
-// Generate WhatsApp Click-to-Chat URL (for business)
+// Generate WhatsApp Click-to-Chat URL (or email fallback if WhatsApp number is not yet configured)
 export function generateBusinessWhatsAppURL(message?: string): string {
+    if (!WHATSAPP_BUSINESS_NUMBER) {
+        const subject = encodeURIComponent('Consulta sobre Conética Educativa');
+        const body = message ? `&body=${encodeURIComponent(message)}` : '';
+        return `mailto:contacto@coneticaeducativa.com?subject=${subject}${body}`;
+    }
     const encodedMessage = message ? encodeURIComponent(message) : '';
     return `https://wa.me/${WHATSAPP_BUSINESS_NUMBER}${message ? `?text=${encodedMessage}` : ''}`;
 }
