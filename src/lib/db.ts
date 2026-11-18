@@ -82,14 +82,13 @@ export function getPgPool(): Pool | null {
             connectionString.includes('localhost') ||
             connectionString.includes('127.0.0.1');
 
-        // Strip channel_binding=require which can fail over pooled connections in node-postgres
+        // Strip sslmode and channel_binding so pg@8.x does not override `ssl: { rejectUnauthorized: false }`
         let safeConnString = connectionString;
         try {
             const parsedUrl = new URL(connectionString);
-            if (parsedUrl.searchParams.has('channel_binding')) {
-                parsedUrl.searchParams.delete('channel_binding');
-                safeConnString = parsedUrl.toString();
-            }
+            parsedUrl.searchParams.delete('sslmode');
+            parsedUrl.searchParams.delete('channel_binding');
+            safeConnString = parsedUrl.toString();
         } catch {
             // Keep original string if URL parsing fails
         }
