@@ -1,16 +1,60 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+function findEnvValue(directNames: string[], suffixNames: string[]): string {
+    for (const name of directNames) {
+        const v = process.env[name]?.trim();
+        if (
+            v &&
+            !v.includes('dummy-project') &&
+            !v.includes('REPLACE_WITH') &&
+            v !== 'dummy'
+        ) {
+            return v;
+        }
+    }
+    for (const [key, val] of Object.entries(process.env)) {
+        if (
+            suffixNames.some((s) => key.endsWith(s)) &&
+            val &&
+            !val.includes('dummy-project') &&
+            !val.includes('REPLACE_WITH')
+        ) {
+            return val.trim();
+        }
+    }
+    return '';
+}
+
+function getSupabaseUrl(): string {
+    return findEnvValue(
+        ['NEXT_PUBLIC_SUPABASE_URL', 'SUPABASE_URL'],
+        ['_SUPABASE_URL']
+    );
+}
+
+function getSupabaseAnonKey(): string {
+    return findEnvValue(
+        [
+            'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+            'SUPABASE_ANON_KEY',
+            'NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY',
+            'SUPABASE_PUBLISHABLE_KEY',
+        ],
+        ['_SUPABASE_ANON_KEY', '_SUPABASE_PUBLISHABLE_KEY']
+    );
+}
+
+function getSupabaseServiceRoleKey(): string {
+    return findEnvValue(
+        ['SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_SECRET_KEY'],
+        ['_SUPABASE_SERVICE_ROLE_KEY', '_SUPABASE_SECRET_KEY']
+    );
+}
 
 export function isSupabaseConfigured(): boolean {
-    return (
-        Boolean(supabaseUrl) &&
-        Boolean(supabaseAnonKey) &&
-        !supabaseUrl.includes('dummy-project') &&
-        !supabaseUrl.includes('REPLACE_WITH_YOUR_PROJECT') &&
-        !supabaseAnonKey.includes('REPLACE_WITH_YOUR_ANON_KEY')
-    );
+    const url = getSupabaseUrl();
+    const key = getSupabaseServiceRoleKey() || getSupabaseAnonKey();
+    return Boolean(url && key);
 }
 
 export function isStripeConfigured(): boolean {
@@ -32,18 +76,23 @@ export function isMercadoPagoConfigured(): boolean {
     );
 }
 
-export const supabase = isSupabaseConfigured()
-    ? createClient(supabaseUrl, supabaseAnonKey)
-    : (null as any);
+const resolvedUrl = getSupabaseUrl();
+const resolvedAnon = getSupabaseAnonKey();
+
+export const supabase =
+    resolvedUrl && resolvedAnon
+        ? createClient(resolvedUrl, resolvedAnon)
+        : (null as any);
 
 export function getSupabaseAdmin() {
-    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+    const url = getSupabaseUrl();
+    const serviceRoleKey = getSupabaseServiceRoleKey();
 
-    if (!isSupabaseConfigured() || !serviceRoleKey || serviceRoleKey.includes('REPLACE_WITH')) {
+    if (!url || !serviceRoleKey) {
         return null as any;
     }
 
-    return createClient(supabaseUrl, serviceRoleKey, {
+    return createClient(url, serviceRoleKey, {
         auth: {
             autoRefreshToken: false,
             persistSession: false

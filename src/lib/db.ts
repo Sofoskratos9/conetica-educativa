@@ -7,12 +7,45 @@ export const PRIMARY_ADMIN_EMAIL = (
     process.env.ADMIN_EMAIL || 'miguel.neftali95@gmail.com'
 ).toLowerCase().trim();
 
-export function getPostgresConnectionString(): string {
-    const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
-    if (!url || url.includes('REPLACE_WITH') || url.includes('dummy')) {
-        return '';
+function isValidPostgresUrl(val: string | undefined): val is string {
+    if (!val) return false;
+    const trimmed = val.trim();
+    if (!trimmed || trimmed.includes('REPLACE_WITH') || trimmed.includes('dummy')) {
+        return false;
     }
-    return url;
+    return trimmed.startsWith('postgres://') || trimmed.startsWith('postgresql://');
+}
+
+export function getPostgresConnectionString(): string {
+    const directCandidates = [
+        process.env.DATABASE_URL,
+        process.env.POSTGRES_URL,
+        process.env.DATABASE_URL_UNPOOLED,
+        process.env.POSTGRES_URL_NON_POOLING,
+        process.env.POSTGRES_PRISMA_URL,
+        process.env.NEON_DATABASE_URL,
+    ];
+
+    for (const candidate of directCandidates) {
+        if (isValidPostgresUrl(candidate)) {
+            return candidate.trim();
+        }
+    }
+
+    // Fallback: detect prefixed Vercel Marketplace Storage env vars (e.g., STORAGE_DATABASE_URL, CONETICA_POSTGRES_URL)
+    for (const [key, value] of Object.entries(process.env)) {
+        if (
+            (key.endsWith('_DATABASE_URL') ||
+                key.endsWith('_POSTGRES_URL') ||
+                key.endsWith('_DATABASE_URL_UNPOOLED') ||
+                key.endsWith('_POSTGRES_URL_NON_POOLING')) &&
+            isValidPostgresUrl(value)
+        ) {
+            return value.trim();
+        }
+    }
+
+    return '';
 }
 
 export function getDatabaseMode(): DatabaseMode {
@@ -52,7 +85,11 @@ export async function ensurePostgresSchema(): Promise<void> {
     if (!globalForPg.__coneticaPgSchemaReady) {
         globalForPg.__coneticaPgSchemaReady = (async () => {
             await pool.query(`
-                CREATE EXTENSION IF NOT EXISTS pgcrypto;
+                DO $$ BEGIN
+                    CREATE EXTENSION IF NOT EXISTS pgcrypto;
+                EXCEPTION WHEN insufficient_privilege THEN
+                    NULL;
+                END $$;
 
                 CREATE TABLE IF NOT EXISTS users (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
