@@ -151,7 +151,7 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                     {
-                        label: "Puntaje EXANI-II",
+                        label: "Estimación EXANI-II",
                         value: loading
                             ? "—"
                             : progress?.exaniLastScore !== null && progress?.exaniLastScore !== undefined
@@ -159,7 +159,7 @@ export default function DashboardPage() {
                               : "Sin intento",
                         sub:
                             progress?.exaniLastScore !== null && progress?.exaniLastScore !== undefined
-                                ? "Última escala CENEVAL estimada"
+                                ? "Última estimación de práctica (EXANI-II)"
                                 : "Realiza un simulacro para calcularlo",
                         icon: TrendingUp,
                         color: "text-emerald-700",

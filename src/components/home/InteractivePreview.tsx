@@ -102,16 +102,16 @@ export function InteractivePreview() {
     const secs = String(secondsLeft % 60).padStart(2, "0");
 
     return (
-        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-slate-900 text-white">
+        <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#EFE7D8]">
             <div className="max-w-6xl mx-auto">
                 <div className="text-center max-w-2xl mx-auto mb-10">
-                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-xs font-semibold uppercase tracking-wider mb-4">
+                    <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-[var(--color-brand-50)] border border-[var(--color-brand-600)] text-[var(--color-brand-600)] text-xs font-semibold uppercase tracking-wider mb-4">
                         <Sparkles size={14} /> Prueba la Plataforma en Vivo
                     </div>
-                    <h2 className="text-3xl sm:text-4xl font-bold text-white mb-3">
+                    <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-3">
                         Interactúa ahora mismo, sin registro previo
                     </h2>
-                    <p className="text-slate-300 text-base sm:text-lg">
+                    <p className="text-[var(--color-text-muted)] text-base sm:text-lg">
                         Explora una muestra real de nuestro simulador EXANI-II, la gráfica vocacional RIASEC y el temporizador de enfoque.
                     </p>
                 </div>
@@ -131,8 +131,8 @@ export function InteractivePreview() {
                                 onClick={() => setActiveTab(tab.id as "exani" | "riasec" | "pomodoro")}
                                 className={`inline-flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold transition-all ${
                                     active
-                                        ? "bg-emerald-500 text-slate-950 shadow-lg"
-                                        : "bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700"
+                                        ? "bg-[var(--color-brand-600)] text-white shadow-lg"
+                                        : "bg-[#FBF8F1] text-[#14532D] hover:bg-[#F5F1EA] border-2 border-[#14532D]"
                                 }`}
                             >
                                 <tab.icon size={17} />
@@ -143,11 +143,11 @@ export function InteractivePreview() {
                 </div>
 
                 {/* Interactive Workspace Card */}
-                <div className="bg-white text-slate-900 rounded-2xl p-6 sm:p-8 shadow-2xl border border-slate-200">
+                <div className="bg-[#FBF8F1] text-slate-900 rounded-[12px] p-6 sm:p-8 shadow-xl border-2 border-[#14532D]">
                     {activeTab === "exani" && (
                         <div className="space-y-6">
                             <div className="flex flex-wrap items-center justify-between gap-2">
-                                <span className="px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-xs font-bold">
+                                <span className="px-3 py-1 rounded-full bg-[var(--color-brand-50)] text-[var(--color-brand-600)] text-xs font-bold">
                                     {currentQuestion.area}
                                 </span>
                                 <span className="text-xs font-semibold text-slate-500">
@@ -165,9 +165,9 @@ export function InteractivePreview() {
                                     const isCorrect = idx === currentQuestion.correctIndex;
                                     const showResult = selectedOption !== null;
                                     let style =
-                                        "border-slate-200 bg-white hover:border-blue-400 hover:bg-blue-50/40 text-slate-800";
+                                        "border-slate-200 bg-white hover:border-[var(--color-brand-400)] hover:bg-[var(--color-brand-50)]/40 text-slate-800";
                                     if (showResult && isCorrect) {
-                                        style = "border-emerald-500 bg-emerald-50 text-emerald-900 font-semibold";
+                                        style = "border-[#14532D] bg-[#EFE7D8] text-[#14532D] font-semibold";
                                     } else if (showResult && isPicked && !isCorrect) {
                                         style = "border-red-400 bg-red-50 text-red-900";
                                     }
@@ -184,7 +184,7 @@ export function InteractivePreview() {
                                                 {opt}
                                             </span>
                                             {showResult && isCorrect && (
-                                                <CheckCircle2 size={18} className="text-emerald-600 flex-shrink-0" />
+                                                <CheckCircle2 size={18} className="text-[var(--color-brand-600)] flex-shrink-0" />
                                             )}
                                             {showResult && isPicked && !isCorrect && (
                                                 <XCircle size={18} className="text-red-500 flex-shrink-0" />
@@ -195,7 +195,7 @@ export function InteractivePreview() {
                             </div>
 
                             {selectedOption !== null && (
-                                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                                <div className="p-4 rounded-xl bg-[#EFE7D8] border border-[#D8CDB2] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                                     <p className="text-sm text-slate-700">
                                         <strong className="text-slate-900">Explicación:</strong>{" "}
                                         {currentQuestion.explanation}
@@ -206,7 +206,7 @@ export function InteractivePreview() {
                                             setQIndex((prev) => (prev + 1) % SAMPLE_QUESTIONS.length);
                                             setSelectedOption(null);
                                         }}
-                                        className="px-4 py-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800 whitespace-nowrap"
+                                        className="px-4 py-2 rounded-lg bg-[var(--color-brand-600)] text-white text-xs font-semibold hover:bg-[var(--color-brand-700)] whitespace-nowrap"
                                     >
                                         Siguiente reactivo
                                     </button>
@@ -242,12 +242,12 @@ export function InteractivePreview() {
                                                         prev.map((r, i) => (i === idx ? { ...r, value: val } : r))
                                                     );
                                                 }}
-                                                className="w-full accent-blue-600"
+                                                className="w-full accent-[#14532D]"
                                             />
                                         </div>
                                     ))}
                                 </div>
-                                <div className="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-900">
+                                <div className="p-3.5 rounded-xl bg-[#EFE7D8] border border-[#14532D] text-xs text-[#14532D]">
                                     <strong>Carreras sugeridas:</strong> {getCareerSuggestion(riasec)}
                                 </div>
                             </div>
@@ -262,8 +262,8 @@ export function InteractivePreview() {
                                         <Radar
                                             name="Afinidad"
                                             dataKey="value"
-                                            stroke="#2563eb"
-                                            fill="#10b981"
+                                            stroke="#14532D"
+                                            fill="#C96F4A"
                                             fillOpacity={0.35}
                                         />
                                     </RadarChart>
@@ -276,7 +276,7 @@ export function InteractivePreview() {
                         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
                             <div className="space-y-3 max-w-md">
                                 <h3 className="text-xl font-bold text-slate-900">
-                                    Sesión de Enfoque Científico (25 min)
+                                    Sesión de enfoque (25 min)
                                 </h3>
                                 <p className="text-sm text-slate-600 leading-relaxed">
                                     Entrena tu atención sostenida con bloques sin distracciones y pausas activas de consolidación.
@@ -285,7 +285,7 @@ export function InteractivePreview() {
                                     <button
                                         type="button"
                                         onClick={() => setRunning((r) => !r)}
-                                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700 transition-colors"
+                                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--color-brand-600)] text-white text-sm font-semibold hover:bg-[var(--color-brand-700)] transition-colors"
                                     >
                                         {running ? <Pause size={16} /> : <Play size={16} />}
                                         {running ? "Pausar" : "Iniciar Bloque"}
@@ -303,8 +303,8 @@ export function InteractivePreview() {
                                 </div>
                             </div>
 
-                            <div className="px-10 py-6 rounded-2xl bg-slate-900 text-white text-center min-w-[220px]">
-                                <div className="text-xs uppercase tracking-widest text-emerald-400 font-semibold mb-1">
+                            <div className="px-10 py-6 rounded-2xl bg-[#14532D] text-white text-center min-w-[220px]">
+                                <div className="text-xs uppercase tracking-widest text-[#F6DDCC] font-semibold mb-1">
                                     Temporizador Activo
                                 </div>
                                 <div className="text-5xl font-extrabold font-mono tracking-tight">
@@ -320,7 +320,7 @@ export function InteractivePreview() {
                         </span>
                         <Link
                             href="/auth/login"
-                            className="inline-flex items-center gap-1.5 text-sm font-bold text-blue-600 hover:underline"
+                            className="inline-flex items-center gap-1.5 text-sm font-bold text-[var(--color-brand-600)] hover:underline"
                         >
                             Probar Demo Completo (1 clic) <ArrowRight size={15} />
                         </Link>

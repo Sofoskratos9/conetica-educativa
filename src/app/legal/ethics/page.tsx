@@ -34,9 +34,9 @@ export default function EthicsPage() {
                                 <div className="flex items-start gap-3">
                                     <CheckCircle className="text-green-600 flex-shrink-0 mt-1" size={20} />
                                     <div>
-                                        <h3 className="font-bold text-gray-900">1. Evidencia Científica</h3>
+                                        <h3 className="font-bold text-gray-900">1. Método y honestidad</h3>
                                         <p className="text-gray-700">
-                                            Todas nuestras metodologías están basadas en investigación peer-reviewed y fuentes oficiales verificables (CENEVAL, SEP, OCDE, UNESCO, OMS). No utilizamos pseudociencia ni técnicas no validadas.
+                                            Nuestras metodologías se inspiran en investigación educativa y fuentes públicas (CENEVAL, SEP, OCDE, UNESCO, OMS). Los cuestionarios y simuladores de la plataforma son ejercicios de práctica y autoconocimiento, no instrumentos validados ni diagnósticos.
                                         </p>
                                     </div>
                                 </div>
@@ -154,7 +154,7 @@ export default function EthicsPage() {
                         <section>
                             <h2 className="text-2xl font-bold text-gray-900 mb-4">Fuentes Científicas</h2>
                             <p className="text-gray-700 mb-3">
-                                Nuestras metodologías están basadas en investigación de:
+                                Nos inspiramos en fuentes públicas como:
                             </p>
                             <ul className="list-disc pl-6 space-y-1 text-gray-700">
                                 <li>CENEVAL (Centro Nacional de Evaluación para la Educación Superior)</li>
@@ -162,7 +162,7 @@ export default function EthicsPage() {
                                 <li>OCDE (Organización para la Cooperación y el Desarrollo Económicos)</li>
                                 <li>UNESCO (Organización de las Naciones Unidas para la Educación)</li>
                                 <li>OMS (Organización Mundial de la Salud) - solo para bienestar general</li>
-                                <li>Revistas científicas peer-reviewed en educación y neurociencia</li>
+                                <li>Publicaciones educativas sobre aprendizaje y estudio</li>
                             </ul>
                         </section>
 

@@ -12,8 +12,10 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ({ className, variant = 'primary', size = 'md', isLoading, children, ...props }, ref) => {
 
         const variants = {
-            primary: "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-500)] shadow-lg shadow-blue-500/20 border border-transparent",
-            secondary: "bg-[var(--color-accent-500)] text-[var(--color-brand-900)] hover:bg-[var(--color-accent-400)] font-semibold border border-transparent",
+            // Primario NEFTALÍ: verde oscuro + texto blanco; hover verde profundo.
+            // Nunca botón terracota, dorado ni degradado.
+            primary: "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)] shadow-lg shadow-[#14532D]/20 border border-transparent",
+            secondary: "bg-[#EFE7D8] text-[var(--color-brand-700)] hover:bg-[#E9E2D3] font-semibold border border-transparent",
             outline: "bg-transparent border border-gray-200 text-[var(--color-text-main)] hover:border-[var(--color-brand-500)] hover:text-[var(--color-brand-600)]",
             ghost: "bg-transparent text-[var(--color-text-muted)] hover:text-[var(--color-brand-600)] hover:bg-[var(--color-brand-50)]"
         };

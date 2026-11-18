@@ -55,7 +55,7 @@ export function computeRealGamification(progress: StudentProgressSnapshot): Gami
         {
             id: 'exani_competitive',
             name: 'Puntaje Competitivo UAA',
-            description: 'Alcanzaste 1,050+ puntos proyectados en escala CENEVAL.',
+            description: 'Alcanzaste una estimación de práctica de 1,050+ puntos (escala de referencia, no oficial).',
             category: 'academico',
             unlocked: (progress.exaniLastScore ?? 0) >= 1050,
             xpBonus: 120,
@@ -70,8 +70,8 @@ export function computeRealGamification(progress: StudentProgressSnapshot): Gami
         },
         {
             id: 'psychometric_insight',
-            name: 'Autoconocimiento Psicométrico',
-            description: 'Completaste al menos un inventario psicométrico validado (EDAOM/VAK/CHASIDE/Bar-On).',
+            name: 'Autoconocimiento',
+            description: 'Completaste al menos un cuestionario de autoconocimiento (EDAOM/VAK/CHASIDE/Bar-On).',
             category: 'exploracion',
             unlocked: psychometricCount >= 1,
             xpBonus: 80,

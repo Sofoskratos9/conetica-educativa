@@ -125,7 +125,7 @@ export default function AdminVocationalPage() {
                         Psicometría y Orientación Vocacional
                     </h1>
                     <p className="text-sm text-slate-500">
-                        Perfiles RIASEC e inventarios validados (EDAOM, VAK, CHASIDE, Bar-On) en tiempo real.
+                        Perfiles RIASEC y cuestionarios de autoconocimiento (EDAOM, VAK, CHASIDE, Bar-On) en tiempo real.
                     </p>
                 </div>
                 <div className="flex gap-2">

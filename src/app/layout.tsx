@@ -23,42 +23,44 @@ const SITE_URL =
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: {
-    default: "Conética Educativa™ | Aprendizaje Basado en Evidencia Científica",
-    template: "%s | Conética Educativa™",
+    default: "Conética Educativa | Pensamiento aplicado a la vida real",
+    template: "%s | Conética Educativa",
   },
   description:
-    "Plataforma educativa basada en evidencia científica para estudiantes, padres y escuelas: diagnóstico cognitivo-académico, preparación EXANI-II UAA, orientación vocacional RIASEC y bienestar académico.",
+    "Pensamiento aplicado a la vida real: diagnóstico académico, preparación EXANI-II UAA, orientación vocacional y consultoría filosófica NEFTALÍ para estudiantes, padres y escuelas en Aguascalientes y en línea.",
   keywords: [
     "Conética Educativa",
     "EXANI-II",
     "UAA",
     "Orientación Vocacional RIASEC",
     "Técnicas de estudio",
+    "Consultoría filosófica",
+    "NEFTALÍ",
     "Aguascalientes",
   ],
   openGraph: {
     type: "website",
     locale: "es_MX",
     url: SITE_URL,
-    siteName: "Conética Educativa™",
-    title: "Conética Educativa™ | Aprendizaje Basado en Evidencia Científica",
+    siteName: "Conética Educativa",
+    title: "Conética Educativa | Pensamiento aplicado a la vida real",
     description:
-      "Diagnóstico académico, simuladores EXANI-II, orientación vocacional RIASEC y bienestar académico para estudiantes, familias y escuelas.",
+      "Diagnóstico académico, simuladores EXANI-II, orientación vocacional y consultoría filosófica NEFTALÍ para estudiantes, familias y escuelas.",
     images: [
       {
-        url: "/images/hero-illustration.jpg",
-        width: 1200,
-        height: 675,
-        alt: "Conética Educativa™ — Aprendizaje basado en evidencia científica",
+        url: "/images/neftali/heroe-decision.png",
+        width: 1920,
+        height: 1280,
+        alt: "Conética Educativa — Pensamiento aplicado a la vida real",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Conética Educativa™ | Aprendizaje Basado en Evidencia Científica",
+    title: "Conética Educativa | Pensamiento aplicado a la vida real",
     description:
-      "Diagnóstico académico, simuladores EXANI-II y orientación vocacional RIASEC.",
-    images: ["/images/hero-illustration.jpg"],
+      "Diagnóstico académico, simuladores EXANI-II, orientación vocacional y consultoría filosófica NEFTALÍ.",
+    images: ["/images/neftali/heroe-decision.png"],
   },
 };
 

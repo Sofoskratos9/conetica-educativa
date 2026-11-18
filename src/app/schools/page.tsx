@@ -47,26 +47,26 @@ export default function SchoolsPage() {
 
     return (
         <div className="min-h-screen bg-[var(--color-surface-50)]">
-            {/* Hero Section */}
-            <div className="gradient-brand text-white py-20 px-4">
+            {/* Hero Section — fondo crema (SISTEMA-VISUAL.md §5). */}
+            <div className="bg-[var(--color-surface-50)] py-20 px-4 border-b-[3px] border-[#14532D]">
                 <div className="max-w-6xl mx-auto grid lg:grid-cols-12 gap-10 items-center">
                     <div className="lg:col-span-7 space-y-5">
-                        <div className="inline-flex items-center gap-2 bg-white/10 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-emerald-300">
+                        <div className="inline-flex items-center gap-2 bg-[#EFE7D8] px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-[var(--color-brand-600)]">
                             <Building2 size={16} />
                             <span>Para Instituciones Educativas</span>
                         </div>
-                        <h1 className="text-4xl sm:text-5xl font-bold text-white">
-                            Talleres Transformadores para tu Colegio
+                        <h1 className="text-4xl sm:text-5xl font-bold text-[var(--color-brand-900)]">
+                            Talleres para pensar bien en tu colegio
                         </h1>
-                        <p className="text-lg sm:text-xl text-slate-200 max-w-2xl">
-                            Programas basados en evidencia científica para fortalecer funciones ejecutivas, pensamiento crítico y uso ético de la IA en estudiantes y docentes.
+                        <p className="text-lg sm:text-xl text-[var(--color-text-muted)] max-w-2xl">
+                            Programas para fortalecer el pensamiento crítico, el proyecto de vida y el uso responsable de la IA en estudiantes y docentes.
                         </p>
                     </div>
                     <div className="lg:col-span-5">
-                        <div className="rounded-2xl overflow-hidden border border-white/15 shadow-2xl">
+                        <div className="rounded-[12px] overflow-hidden border-2 border-[#14532D] shadow-lg max-w-sm mx-auto">
                             <img
-                                src="/images/schools-illustration.jpg"
-                                alt="Talleres colaborativos Conética Educativa"
+                                src="/images/neftali/planta.png"
+                                alt="Ilustración dibujada a mano: un joven regando una plantita, símbolo de crecimiento"
                                 className="w-full h-auto object-cover"
                             />
                         </div>
@@ -106,7 +106,7 @@ export default function SchoolsPage() {
                                 </div>
                                 {workshop.benefits.map((benefit, i) => (
                                     <div key={i} className="flex items-center gap-2 text-sm text-slate-700">
-                                        <Check size={16} className="text-emerald-600 flex-shrink-0" />
+                                        <Check size={16} className="text-[var(--color-accent-600)] flex-shrink-0" />
                                         <span>{benefit}</span>
                                     </div>
                                 ))}
@@ -133,10 +133,10 @@ export default function SchoolsPage() {
                     )}
 
                     {submittedRef ? (
-                        <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-8 text-center space-y-3">
-                            <Check size={44} className="text-emerald-600 mx-auto" />
-                            <h3 className="text-xl font-bold text-emerald-900">¡Solicitud Registrada!</h3>
-                            <p className="text-sm text-emerald-800">
+                        <div className="bg-[#EFE7D8] border-2 border-[#14532D] rounded-[12px] p-8 text-center space-y-3">
+                            <Check size={44} className="text-[var(--color-brand-600)] mx-auto" />
+                            <h3 className="text-xl font-bold text-[var(--color-brand-900)]">¡Solicitud Registrada!</h3>
+                            <p className="text-sm text-[var(--color-text-muted)]">
                                 Folio de seguimiento: <strong className="font-mono">{submittedRef}</strong>. Nos pondremos en contacto en menos de 24 horas hábiles.
                             </p>
                             <Button variant="outline" size="sm" onClick={() => setSubmittedRef(null)}>

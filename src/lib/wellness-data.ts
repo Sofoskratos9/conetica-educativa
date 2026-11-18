@@ -17,32 +17,32 @@ export const CATEGORIES = [
         title: 'Claridad Mental',
         description: 'Técnicas para reducir la carga cognitiva y mejorar la toma de decisiones.',
         icon: Brain,
-        color: 'text-blue-600',
-        bg: 'bg-blue-50'
+        color: 'text-[var(--color-brand-600)]',
+        bg: 'bg-[var(--color-brand-50)]'
     },
     {
         id: 'organization' as StrategyCategory,
         title: 'Organización Semanal',
         description: 'Sistemas para estructurar tu tiempo y priorizar tareas académicas.',
         icon: Calendar,
-        color: 'text-purple-600',
-        bg: 'bg-purple-50'
+        color: 'text-[var(--color-accent-600)]',
+        bg: 'bg-[var(--color-accent-50)]'
     },
     {
         id: 'exam-prep' as StrategyCategory,
         title: 'Estructura Pre-Examen',
         description: 'Protocolos de preparación logística y mental para el día de la prueba.',
         icon: CheckSquare,
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50'
+        color: 'text-[#5C7A4A]',
+        bg: 'bg-[#EEF2E6]'
     },
     {
         id: 'attention' as StrategyCategory,
         title: 'Estrategias de Atención',
         description: 'Ejercicios para entrenar el enfoque sostenido y evitar distracciones.',
         icon: Focus,
-        color: 'text-orange-600',
-        bg: 'bg-orange-50'
+        color: 'text-[#8A6D3B]',
+        bg: 'bg-[#F3EDE0]'
     }
 ];
 
@@ -64,7 +64,7 @@ export const STRATEGIES: Record<StrategyCategory, Strategy[]> = {
         {
             id: 'box-breathing',
             title: 'Respiración Táctica',
-            description: 'Técnica utilizada para recuperar el control fisiológico ante situaciones de alta demanda.',
+            description: 'Técnica para recuperar la calma ante situaciones de alta demanda.',
             steps: [
                 'Inhala por la nariz contando hasta 4.',
                 'Mantén el aire contando hasta 4.',
@@ -72,7 +72,7 @@ export const STRATEGIES: Record<StrategyCategory, Strategy[]> = {
                 'Mantén los pulmones vacíos contando hasta 4.',
                 'Repite el ciclo 4 veces.'
             ],
-            science: 'Regula el sistema nervioso autónomo, reduciendo la respuesta de "lucha o huida" y mejorando el enfoque.',
+            science: 'Respirar con ritmo ayuda a recuperar la calma y el enfoque antes de seguir estudiando.',
             duration: '2 min'
         }
     ],
@@ -87,7 +87,7 @@ export const STRATEGIES: Record<StrategyCategory, Strategy[]> = {
                 'Agrupa tareas administrativas (correos, mensajes) en bloques de 30 minutos por la tarde.',
                 'Respeta los descansos entre bloques.'
             ],
-            science: 'El cerebro opera óptimamente en ciclos ultradianos de aproximadamente 90 minutos de enfoque.',
+            science: 'Trabajar en bloques con descansos ayuda a sostener la atención durante el estudio.',
             duration: 'Planificación semanal'
         },
         {
@@ -145,7 +145,7 @@ export const STRATEGIES: Record<StrategyCategory, Strategy[]> = {
                 'Toma un descanso breve de 5 minutos (levántate, estírate).',
                 'Cada 4 ciclos, toma un descanso largo de 20 minutos.'
             ],
-            science: 'Los descansos frecuentes previenen la fatiga cognitiva y mantienen niveles estables de dopamina y atención.',
+            science: 'Los descansos frecuentes previenen la fatiga y ayudan a mantener la atención.',
             duration: '25 min + 5 min'
         }
     ]

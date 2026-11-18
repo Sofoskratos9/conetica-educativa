@@ -21,8 +21,8 @@ export const WORKSHOPS: Workshop[] = [
         duration: '2 horas',
         benefits: ['Mejora del autocontrol', 'Resolución de conflictos', 'Planificación de tareas'],
         icon: Brain,
-        color: 'text-blue-600',
-        bg: 'bg-blue-50'
+        color: 'text-[var(--color-brand-600)]',
+        bg: 'bg-[var(--color-brand-50)]'
     },
     {
         id: 'responsible-ai',
@@ -32,8 +32,8 @@ export const WORKSHOPS: Workshop[] = [
         duration: '4 horas (Intensivo)',
         benefits: ['Herramientas actuales', 'Ética y plagio', 'Optimización de planeaciones'],
         icon: Cpu,
-        color: 'text-purple-600',
-        bg: 'bg-purple-50'
+        color: 'text-[var(--color-accent-600)]',
+        bg: 'bg-[var(--color-accent-50)]'
     },
     {
         id: 'critical-thinking',
@@ -43,8 +43,8 @@ export const WORKSHOPS: Workshop[] = [
         duration: '3 horas',
         benefits: ['Análisis de fuentes', 'Debate estructurado', 'Detección de falacias'],
         icon: Lightbulb,
-        color: 'text-yellow-600',
-        bg: 'bg-yellow-50'
+        color: 'text-[#8A6D3B]',
+        bg: 'bg-[#F3EDE0]'
     },
     {
         id: 'life-project',
@@ -54,7 +54,7 @@ export const WORKSHOPS: Workshop[] = [
         duration: 'Taller continuo (3 sesiones)',
         benefits: ['Autoconocimiento', 'Definición de metas', 'Motivación intrínseca'],
         icon: Compass,
-        color: 'text-emerald-600',
-        bg: 'bg-emerald-50'
+        color: 'text-[#2E6B45]',
+        bg: 'bg-[#EEF2E6]'
     }
 ];

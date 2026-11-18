@@ -35,7 +35,7 @@ export function Navbar() {
                     {/* Brand */}
                     <Link href="/" className="flex items-center gap-2.5 group">
                         <div className="w-9 h-9 rounded-xl gradient-brand text-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                            <Compass size={20} className="text-emerald-400" />
+                            <Compass size={20} className="text-[#F6DDCC]" />
                         </div>
                         <div className="leading-none">
                             <span className="font-bold text-lg text-[var(--color-brand-900)] tracking-tight">
@@ -70,6 +70,14 @@ export function Navbar() {
 
                     {/* Actions */}
                     <div className="hidden md:flex items-center gap-3">
+                        <a
+                            href="https://cal.com/miguel-neftali-lopez-wnkrwr/consultoria"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3.5 py-2 text-sm font-semibold text-[var(--color-accent-600)] hover:text-[var(--color-brand-700)] transition-colors"
+                        >
+                            Sesión NEFTALÍ · $400
+                        </a>
                         {user ? (
                             <Link href={getRedirectPath(user.role)}>
                                 <Button size="sm" className="gap-2">
@@ -87,7 +95,7 @@ export function Navbar() {
                                 </Link>
                                 <Link href="/auth/register">
                                     <Button size="sm" className="gap-1.5">
-                                        Comenzar Gratis
+                                        Crear cuenta
                                         <ArrowRight size={15} />
                                     </Button>
                                 </Link>
@@ -121,6 +129,15 @@ export function Navbar() {
                         </Link>
                     ))}
                     <div className="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                        <a
+                            href="https://cal.com/miguel-neftali-lopez-wnkrwr/consultoria"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onClick={() => setMobileOpen(false)}
+                            className="block px-3 py-2.5 rounded-lg text-sm font-semibold text-[var(--color-accent-600)] hover:bg-slate-50"
+                        >
+                            Sesión NEFTALÍ · $400
+                        </a>
                         {user ? (
                             <Link href={getRedirectPath(user.role)} onClick={() => setMobileOpen(false)}>
                                 <Button className="w-full justify-center gap-2">
@@ -136,7 +153,7 @@ export function Navbar() {
                                 </Link>
                                 <Link href="/auth/register" onClick={() => setMobileOpen(false)}>
                                     <Button className="w-full justify-center">
-                                        Comenzar Gratis
+                                        Crear cuenta
                                     </Button>
                                 </Link>
                             </>

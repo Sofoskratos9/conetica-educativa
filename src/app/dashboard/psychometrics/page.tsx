@@ -131,14 +131,14 @@ export default function PsychometricsPage() {
                     }}
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-slate-600 hover:text-slate-900"
                 >
-                    <ArrowLeft size={16} /> Volver al Centro Psicométrico
+                    <ArrowLeft size={16} /> Volver al Centro de autoconocimiento
                 </button>
 
                 <div className="surface-card rounded-2xl p-7 space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 pb-5">
                         <div>
                             <div className="text-xs font-bold uppercase tracking-wider text-emerald-600">
-                                Resultado Psicométrico Validado
+                                Resultado de tu cuestionario de autoconocimiento
                             </div>
                             <h1 className="text-2xl font-bold text-slate-900 mt-1">{viewResult.testName}</h1>
                             <p className="text-sm text-slate-600 mt-1">{viewResult.recommendation}</p>
@@ -312,10 +312,10 @@ export default function PsychometricsPage() {
         <div className="max-w-5xl mx-auto space-y-8">
             <div>
                 <h1 className="text-3xl font-bold text-[var(--color-brand-900)]">
-                    Centro Psicométrico Validado
+                    Centro de autoconocimiento
                 </h1>
                 <p className="text-slate-600 mt-1">
-                    Instrumentos adaptados para México (EDAOM, VAK, CHASIDE y Bar-On) para descubrir cómo aprendes mejor y gestionar el estrés de admisión.
+                    Cuestionarios de autoconocimiento inspirados en EDAOM, VAK, CHASIDE y Bar-On, para descubrir cómo aprendes mejor. No son instrumentos validados ni diagnósticos.
                 </p>
             </div>
 

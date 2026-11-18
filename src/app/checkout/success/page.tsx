@@ -68,7 +68,7 @@ function SuccessContent() {
                     <ul className="space-y-2 text-sm text-slate-700">
                         {(product?.features || [
                             "Módulos avanzados de estudio",
-                            "Simuladores EXANI-II ilimitados",
+                            "Simuladores EXANI-II con retroalimentación",
                             "Orientación vocacional RIASEC",
                         ]).map((feat, i) => (
                             <li key={i} className="flex items-center gap-2">

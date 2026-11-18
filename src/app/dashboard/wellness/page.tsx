@@ -33,8 +33,8 @@ interface BreathingPhase {
 
 const BREATHING_PROTOCOLS: Record<BreathingMode, { name: string; subtitle: string; phases: BreathingPhase[] }> = {
     "4-7-8": {
-        name: "Calma 4-7-8 (Anti-ansiedad pre-examen)",
-        subtitle: "Activa el sistema nervioso parasimpático antes de un simulacro o evaluación.",
+        name: "Calma 4-7-8 (pre-examen)",
+        subtitle: "Respirar con ritmo ayuda a recuperar la calma antes de un simulacro o evaluación.",
         phases: [
             { label: "Inhala lento", seconds: 4, scale: "scale-110", instruction: "Inspira por la nariz suavemente" },
             { label: "Sostén el aire", seconds: 7, scale: "scale-110", instruction: "Mantén la calma sin tensar hombros" },
@@ -169,8 +169,8 @@ export default function WellnessDashboardPage() {
         await recordWellnessPractice(
             kind,
             kind === "neuro-focus"
-                ? "Audio Binaural 40 Hz (Enfoque Profundo)"
-                : "Protocolo NSDR (Calma y Recuperación)",
+                ? "Audio para concentrarte"
+                : "Audio para descansar la mente",
             kind === "neuro-focus" ? 3 : 4
         );
         setSavingAudio(false);
@@ -193,49 +193,49 @@ export default function WellnessDashboardPage() {
                 <div>
                     <h1 className="text-3xl font-bold text-[var(--color-brand-900)]">Bienestar Académico</h1>
                     <p className="text-[var(--color-text-muted)] mt-1">
-                        Herramientas interactivas de audio binaural, respiración guiada y autorregulación científica.
+                        Herramientas de audio, respiración guiada y pausas para estudiar con calma.
                     </p>
                 </div>
-                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold">
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--color-brand-50)] text-[var(--color-brand-600)] text-sm font-semibold">
                     <CheckCircle2 size={16} />
                     {completedCount} estrategia(s) practicada(s)
                 </div>
             </div>
 
             {statusMessage && (
-                <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-800 flex items-center justify-between gap-3">
+                <div className="rounded-xl border-2 border-[#14532D] bg-[#EFE7D8] px-4 py-3 text-sm font-medium text-[#14532D] flex items-center justify-between gap-3">
                     <span className="inline-flex items-center gap-2">
                         <Sparkles size={16} /> {statusMessage}
                     </span>
                     <button
                         type="button"
                         onClick={() => setStatusMessage(null)}
-                        className="text-xs font-bold text-emerald-700 hover:underline"
+                        className="text-xs font-bold text-[var(--color-brand-700)] hover:underline"
                     >
                         Ocultar
                     </button>
                 </div>
             )}
 
-            <div className="bg-gradient-to-r from-[var(--color-brand-600)] to-[var(--color-brand-500)] rounded-2xl p-6 text-white shadow-lg">
+            <div className="bg-[#EFE7D8] border-2 border-[#14532D] rounded-[12px] p-6 shadow-lg">
                 <div className="flex items-start gap-4">
-                    <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
-                        <Lightbulb size={24} className="text-yellow-300" />
+                    <div className="p-3 bg-[#FBF8F1] border border-[#14532D] rounded-xl">
+                        <Lightbulb size={24} className="text-[#D9A441]" />
                     </div>
                     <div>
-                        <div className="text-sm font-medium text-blue-100 mb-1 uppercase tracking-wider">Estrategia Recomendada</div>
-                        <h3 className="text-xl font-bold mb-2">{dailyRec.title}</h3>
-                        <p className="text-blue-100 mb-4 max-w-2xl">
+                        <div className="text-sm font-medium text-[var(--color-text-muted)] mb-1 uppercase tracking-wider">Estrategia Recomendada</div>
+                        <h3 className="text-xl font-bold mb-2 text-[var(--color-brand-900)]">{dailyRec.title}</h3>
+                        <p className="text-[var(--color-text-muted)] mb-4 max-w-2xl">
                             {dailyRec.description}
                         </p>
-                        <Link href="/dashboard/wellness/clarity" className="inline-flex items-center gap-2 text-sm font-bold hover:underline">
+                        <Link href="/dashboard/wellness/clarity" className="inline-flex items-center gap-2 text-sm font-bold text-[var(--color-brand-700)] hover:underline">
                             Ver técnica completa <ArrowRight size={16} />
                         </Link>
                     </div>
                 </div>
             </div>
 
-            {/* Interactive Neuro-Audio + Breathing Pacer */}
+            {/* Audio + Respiración guiada */}
             <div className="grid lg:grid-cols-2 gap-6">
                 {/* Binaural Audio Lab */}
                 <div className="surface-card p-6 rounded-2xl space-y-5">
@@ -243,10 +243,10 @@ export default function WellnessDashboardPage() {
                         <div>
                             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
                                 <Headphones size={20} className="text-[var(--color-brand-600)]" />
-                                Laboratorio de Neuro-Audio Binaural
+                                Audio para estudiar
                             </h2>
                             <p className="text-xs text-slate-500 mt-1">
-                                Síntesis estéreo en tiempo real vía Web Audio API (usa audífonos para efecto binaural).
+                                Sonido estéreo en tiempo real vía Web Audio API (usa audífonos).
                             </p>
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -258,8 +258,8 @@ export default function WellnessDashboardPage() {
                                 step={0.05}
                                 value={volume}
                                 onChange={(e) => handleVolumeChange(Number(e.target.value))}
-                                aria-label="Volumen de audio binaural"
-                                className="w-20 accent-blue-600"
+                                aria-label="Volumen del audio"
+                                className="w-20 accent-[#14532D]"
                             />
                         </div>
                     </div>
@@ -268,9 +268,9 @@ export default function WellnessDashboardPage() {
                         <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <h3 className="font-bold text-slate-900 text-sm">Enfoque Gamma 40 Hz + Pad Armónico</h3>
+                                    <h3 className="font-bold text-slate-900 text-sm">Audio para concentrarte + Pad Armónico</h3>
                                     <p className="text-xs text-slate-500">
-                                        200 Hz oído izquierdo / 240 Hz oído derecho para concentración sostenida.
+                                        Sonido estéreo suave para acompañar tu concentración.
                                     </p>
                                 </div>
                                 <button
@@ -298,7 +298,7 @@ export default function WellnessDashboardPage() {
                                     type="button"
                                     disabled={savingAudio}
                                     onClick={() => handleLogAudioSession("neuro-focus")}
-                                    className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 inline-flex items-center gap-1.5 disabled:opacity-60"
+                                    className="px-3 py-1.5 rounded-lg bg-[#EFE7D8] border border-[#14532D] text-xs font-semibold text-[var(--color-brand-700)] hover:bg-[#E9E2D3] inline-flex items-center gap-1.5 disabled:opacity-60"
                                 >
                                     <CheckCircle2 size={13} /> Registrar práctica en progreso
                                 </button>
@@ -308,7 +308,7 @@ export default function WellnessDashboardPage() {
                         <div className="p-4 rounded-xl border border-slate-200 bg-slate-50/70 space-y-3">
                             <div className="flex items-center justify-between gap-3">
                                 <div>
-                                    <h3 className="font-bold text-slate-900 text-sm">Protocolo NSDR (Alfa 10 Hz → Theta 6 Hz)</h3>
+                                    <h3 className="font-bold text-slate-900 text-sm">Audio para descansar la mente</h3>
                                     <p className="text-xs text-slate-500">
                                         Descenso progresivo para descansar la mente y reducir fatiga entre exámenes.
                                     </p>
@@ -319,7 +319,7 @@ export default function WellnessDashboardPage() {
                                     className={`px-3.5 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 transition-colors ${
                                         playingKind === "nsdr-calm"
                                             ? "bg-red-600 text-white hover:bg-red-700"
-                                            : "bg-indigo-600 text-white hover:bg-indigo-700"
+                                            : "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)]"
                                     }`}
                                 >
                                     {playingKind === "nsdr-calm" ? <Square size={14} /> : <Play size={14} />}
@@ -338,7 +338,7 @@ export default function WellnessDashboardPage() {
                                     type="button"
                                     disabled={savingAudio}
                                     onClick={() => handleLogAudioSession("nsdr-calm")}
-                                    className="px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700 hover:bg-emerald-100 inline-flex items-center gap-1.5 disabled:opacity-60"
+                                    className="px-3 py-1.5 rounded-lg bg-[#EFE7D8] border border-[#14532D] text-xs font-semibold text-[var(--color-brand-700)] hover:bg-[#E9E2D3] inline-flex items-center gap-1.5 disabled:opacity-60"
                                 >
                                     <CheckCircle2 size={13} /> Registrar práctica en progreso
                                 </button>
@@ -352,7 +352,7 @@ export default function WellnessDashboardPage() {
                     <div>
                         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                             <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                                <Wind size={20} className="text-teal-600" />
+                                <Wind size={20} className="text-[var(--color-brand-600)]" />
                                 Guía Visual de Respiración
                             </h2>
                             <div className="inline-flex rounded-xl bg-slate-100 p-1">
@@ -381,14 +381,14 @@ export default function WellnessDashboardPage() {
 
                     <div className="flex flex-col items-center justify-center py-4">
                         <div
-                            className={`w-36 h-36 rounded-full bg-gradient-to-br from-teal-50 to-blue-100 border-4 border-teal-500/40 flex flex-col items-center justify-center transition-transform duration-1000 ${
+                            className={`w-36 h-36 rounded-full bg-[#EFE7D8] border-4 border-[#14532D]/40 flex flex-col items-center justify-center transition-transform duration-1000 ${
                                 breathRunning ? currentPhase.scale : "scale-100"
                             }`}
                         >
                             <span className="text-3xl font-extrabold text-[var(--color-brand-900)] tabular-nums">
                                 {secondsLeft}s
                             </span>
-                            <span className="text-xs font-bold text-teal-700 uppercase tracking-wide mt-1">
+                            <span className="text-xs font-bold text-[var(--color-brand-700)] uppercase tracking-wide mt-1">
                                 {breathRunning ? currentPhase.label : "Listo"}
                             </span>
                         </div>
@@ -417,7 +417,7 @@ export default function WellnessDashboardPage() {
                                 className={`px-4 py-2 rounded-xl text-xs font-bold inline-flex items-center gap-1.5 ${
                                     breathRunning
                                         ? "bg-slate-200 text-slate-800 hover:bg-slate-300"
-                                        : "bg-teal-600 text-white hover:bg-teal-700"
+                                        : "bg-[var(--color-brand-600)] text-white hover:bg-[var(--color-brand-700)]"
                                 }`}
                             >
                                 {breathRunning ? <Square size={14} /> : <Play size={14} />}

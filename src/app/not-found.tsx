@@ -6,7 +6,7 @@ export default function NotFound() {
         <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
             <div className="surface-card max-w-lg w-full p-8 sm:p-10 rounded-3xl text-center space-y-6">
                 <div className="w-16 h-16 rounded-2xl gradient-brand text-white flex items-center justify-center mx-auto shadow-lg">
-                    <Compass size={32} className="text-emerald-400" />
+                    <Compass size={32} className="text-[#F6DDCC]" />
                 </div>
                 <div className="space-y-2">
                     <span className="inline-block px-3 py-1 rounded-full bg-slate-100 text-slate-600 text-xs font-bold tracking-wider uppercase">

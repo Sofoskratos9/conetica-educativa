@@ -17,14 +17,14 @@ export const PRODUCTS: Product[] = [
     {
         id: 'premium_monthly',
         name: 'Conética Premium',
-        description: 'Acceso completo e ilimitado a todos los módulos, simuladores EXANI-II y orientación vocacional.',
+        description: 'Acceso completo a todos los módulos, simuladores EXANI-II y orientación vocacional.',
         price: 299,
         currency: 'MXN',
         interval: 'mensual',
         type: 'subscription',
         features: [
             'Acceso total a los 6 módulos educativos',
-            'Simuladores EXANI-II ilimitados con retroalimentación',
+            'Simuladores EXANI-II con retroalimentación',
             'Plan de estudio adaptativo con técnica Pomodoro',
             'Test vocacional RIASEC completo y reporte detallado',
             'Soporte prioritario por WhatsApp'
@@ -57,14 +57,14 @@ export const PRODUCTS: Product[] = [
     },
     {
         id: 'single_session',
-        name: 'Sesión Individual 1:1',
-        description: 'Sesión intensiva para resolver dudas específicas, ajustar estrategia o revisar resultados.',
+        name: 'Sesión Académica Individual 1:1',
+        description: 'Sesión académica para resolver dudas específicas, ajustar estrategia o revisar resultados. Distinta de la sesión de consultoría filosófica NEFTALÍ.',
         price: 500,
         currency: 'MXN',
         interval: 'único',
         type: 'one_time',
         features: [
-            '1 sesión de 60 minutos con especialista',
+            '1 sesión académica de 60 minutos con tutor',
             'Resolución de dudas estratégicas o temáticas',
             'Resumen escrito con siguientes pasos'
         ],
@@ -73,13 +73,13 @@ export const PRODUCTS: Product[] = [
     {
         id: 'vocational_pack',
         name: 'Orientación Vocacional Completa',
-        description: 'Evaluación psicométrica educativa RIASEC con sesión de interpretación profesional.',
+        description: 'Evaluación vocacional RIASEC con sesión de interpretación.',
         price: 850,
         currency: 'MXN',
         interval: 'único',
         type: 'one_time',
         features: [
-            'Test RIASEC profundo y análisis de aptitudes',
+            'Test RIASEC y análisis de aptitudes',
             'Sesión de interpretación 1:1 (90 min)',
             'Reporte de compatibilidad con carreras UAA y nacionales'
         ],
@@ -88,14 +88,14 @@ export const PRODUCTS: Product[] = [
     {
         id: 'exani_prep',
         name: 'Preparación EXANI-II Personalizada',
-        description: 'Programa integral enfocado en maximizar tu puntaje de admisión universitaria.',
+        description: 'Programa para preparar tu examen de admisión universitaria con método.',
         price: 2500,
         currency: 'MXN',
         interval: 'único',
         type: 'one_time',
         features: [
             'Diagnóstico inicial estilo CENEVAL EXANI-II',
-            '5 sesiones de estrategia cognitiva y resolución',
+            '5 sesiones de estrategia y resolución',
             'Banco de reactivos comentado y simulacros cronometrados'
         ],
         modulesGranted: ['exani_prep', 'diagnostic', 'study_plan']

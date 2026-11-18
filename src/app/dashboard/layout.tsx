@@ -145,7 +145,7 @@ export default function DashboardLayout({
                             <Sparkles size={14} /> Conética Premium
                         </div>
                         <p className="text-slate-200 leading-relaxed">
-                            Desbloquea simuladores EXANI-II ilimitados y reportes completos.
+                            Desbloquea simuladores EXANI-II y reportes completos.
                         </p>
                         <Link
                             href="/checkout?product=premium_monthly"
@@ -205,7 +205,7 @@ export default function DashboardLayout({
 
                     <div className="flex-1 px-4 lg:px-0">
                         <span className="text-sm font-medium text-slate-500 hidden sm:inline">
-                            Plataforma de Aprendizaje Basada en Evidencia
+                            Plataforma de Aprendizaje Conética
                         </span>
                     </div>
 

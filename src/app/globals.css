@@ -2,51 +2,69 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Conética Educativa™ - Editorial Academic Design System */
+/* Conética Educativa — Sistema visual NEFTALÍ (dibujado a mano).
+   Antes: "Editorial Academic" azul marino/cobalto + esmeralda.
+   Ahora: fondo crema, verde oscuro, terracota; tinta suelta + acuarela.
+   Las ilustraciones del sistema viven en public/images/ (pendiente de
+   sustitución por las ilustraciones NEFTALÍ compartidas). */
 
 :root {
-  /* Primary Brand Colors - Deep Academic Navy & Cobalt */
-  --color-brand-50: #f0f5ff;
-  --color-brand-100: #e0ebff;
-  --color-brand-200: #c2d8ff;
-  --color-brand-300: #93b8ff;
-  --color-brand-400: #5c8eff;
-  --color-brand-500: #2563eb;
-  --color-brand-600: #1d4ed8;
-  --color-brand-700: #1e3a8a;
-  --color-brand-800: #172554;
-  --color-brand-900: #0f172a;
-  --color-brand-500-rgb: 37, 99, 235;
+  /* NEFTALÍ — paleta exacta (SISTEMA-VISUAL.md §1 y §7). */
+  --neftali-cream: #f5f1ea;
+  --neftali-cream-paper: #fbf8f1;
+  --neftali-cream-deep: #efe7d8;
+  --neftali-green: #14532d;
+  --neftali-green-deep: #0e3b20;
+  --neftali-green-mid: #2e6b45;
+  --neftali-terracotta: #c96f4a;
+  --neftali-terracotta-deep: #a8542f;
+  --neftali-ochre: #d9a441;
+  --neftali-sage: #8aa899;
+  --neftali-slate-blue: #6b8cae;
+  --neftali-ink: #2b2b26;
 
-  /* Accent Color - Emerald Growth */
-  --color-accent-50: #ecfdf5;
-  --color-accent-100: #d1fae5;
-  --color-accent-200: #a7f3d0;
-  --color-accent-300: #6ee7b7;
-  --color-accent-400: #34d399;
-  --color-accent-500: #10b981;
-  --color-accent-600: #059669;
-  --color-accent-700: #047857;
-  --color-accent-800: #065f46;
-  --color-accent-900: #064e3b;
+  /* Verde oscuro NEFTALÍ (antes azul #2563eb…) */
+  --color-brand-50: #f5f1ea;
+  --color-brand-100: #e9e2d3;
+  --color-brand-200: #d8cdb2;
+  --color-brand-300: #b7a67e;
+  --color-brand-400: #2e6b45;
+  --color-brand-500: #14532d;
+  --color-brand-600: #14532d;
+  --color-brand-700: #0e3b20;
+  --color-brand-800: #0b2e19;
+  --color-brand-900: #082412;
+  --color-brand-500-rgb: 20, 83, 45;
 
-  /* Surface & Text Colors */
-  --color-surface-50: #f8fafc;
-  --color-surface-100: #ffffff;
-  --color-surface-200: #f1f5f9;
-  --color-surface-300: #e2e8f0;
-  --color-text-main: #0f172a;
-  --color-text-muted: #475569;
+  /* Terracota NEFTALÍ (antes esmeralda #10b981…). Solo acento. */
+  --color-accent-50: #fbf0e9;
+  --color-accent-100: #f6ddcc;
+  --color-accent-200: #edbc9c;
+  --color-accent-300: #de8f5f;
+  --color-accent-400: #c96f4a;
+  --color-accent-500: #c96f4a;
+  --color-accent-600: #a8542f;
+  --color-accent-700: #83391b;
+  --color-accent-800: #6b2f18;
+  --color-accent-900: #552614;
 
-  /* Typography */
+  /* Superficies crema y texto (antes slate/blanco frío) */
+  --color-surface-50: #f5f1ea;
+  --color-surface-100: #fbf8f1;
+  --color-surface-200: #efe7d8;
+  --color-surface-300: #d8cdb2;
+  --color-text-main: #14532d;
+  --color-text-muted: #2e6b45;
+
+  /* Tipografía — pila de sistema, sin fuente web externa. */
   --font-primary: var(--font-inter), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-heading: var(--font-jakarta), var(--font-inter), sans-serif;
 
-  /* Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
-  --shadow-md: 0 6px 16px -4px rgba(15, 23, 42, 0.08);
-  --shadow-lg: 0 16px 32px -8px rgba(15, 23, 42, 0.12);
-  --shadow-xl: 0 24px 48px -12px rgba(15, 23, 42, 0.16);
+  /* Sombras suaves, cálidas */
+  --shadow-sm: 0 1px 2px 0 rgba(28, 43, 31, 0.06);
+  --shadow-md: 0 6px 16px -4px rgba(28, 43, 31, 0.10);
+  --shadow-lg: 0 16px 32px -8px rgba(28, 43, 31, 0.14);
+  --shadow-xl: 0 24px 48px -12px rgba(28, 43, 31, 0.18);
 }
 
 html {
@@ -74,33 +92,55 @@ h6 {
   letter-spacing: -0.02em;
 }
 
-/* Surfaces & Brand Utilities */
+/* Superficies y utilidades de marca.
+   Regla NEFTALÍ: fondo siempre crema; verde oscuro para texto y acción;
+   terracota solo como acento. Sin degradados, sin dorado. */
 .glass-effect {
-  background: rgba(255, 255, 255, 0.88);
+  background: rgba(245, 241, 234, 0.92);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid rgba(20, 83, 45, 0.14);
 }
 
+/* Antes degradado azul; ahora verde oscuro sólido (sin degradados).
+   Se conserva el nombre porque lo usan el logo, 404 y tarjetas
+   pequeñas. Las secciones principales usan fondo crema, no esta clase. */
 .gradient-brand {
-  background: linear-gradient(135deg, #0b132b 0%, #172554 55%, #1e3a8a 100%);
+  background: #14532d;
 }
 
 .gradient-accent {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: #c96f4a;
 }
 
 .surface-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
+  background: #fbf8f1;
+  border: 1.5px solid rgba(20, 83, 45, 0.22);
+  border-radius: 12px;
   box-shadow: var(--shadow-sm);
   transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
 .surface-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: #cbd5e1;
+  border-color: rgba(20, 83, 45, 0.45);
+}
+
+/* Tarjeta NEFTALÍ: crema papel, borde verde oscuro 2 px, radio 12 px. */
+.sketch-card {
+  background: #fbf8f1;
+  border: 2px solid #14532d;
+  border-radius: 12px;
+  box-shadow: 3px 4px 0 rgba(20, 83, 45, 0.12);
+}
+
+/* Subrayado ondulado a mano para destacar una palabra del titular. */
+.sketch-underline {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='9' viewBox='0 0 120 9'%3E%3Cpath d='M2 6 Q 12 2 24 5 T 46 5 T 68 5 T 90 5 T 118 5' fill='none' stroke='%23C96F4A' stroke-width='2.5' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 0.45em;
+  padding-bottom: 0.12em;
 }
 
 @keyframes fadeIn {

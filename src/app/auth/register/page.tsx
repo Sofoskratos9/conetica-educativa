@@ -87,7 +87,7 @@ export default function RegisterPage() {
                             Crea tu cuenta gratuita
                         </h1>
                         <p className="mt-2 text-[var(--color-text-muted)]">
-                            Comienza tu diagnóstico y plan basado en evidencia científica.
+                            Comienza tu evaluación y plan de estudio con método.
                         </p>
                     </div>
 
@@ -238,10 +238,10 @@ export default function RegisterPage() {
                         <GraduationCap size={40} />
                     </div>
                     <h3 className="text-3xl font-bold text-white">
-                        Únete a una comunidad educativa ética y científica
+                        Únete a una comunidad educativa ética y con método
                     </h3>
                     <p className="text-slate-200 leading-relaxed">
-                        Accede de inmediato a herramientas de diagnóstico cognitivo, simuladores EXANI-II, orientación vocacional RIASEC y seguimiento transparente.
+                        Accede de inmediato a herramientas de evaluación académica, simuladores EXANI-II, orientación vocacional RIASEC y seguimiento transparente.
                     </p>
                 </div>
             </div>

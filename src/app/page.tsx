@@ -5,6 +5,11 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/Button";
 import { InteractivePreview } from "@/components/home/InteractivePreview";
 import {
+  NEFTALI_CAL_COM_URL,
+  NEFTALI_DIALOGUES,
+  NEFTALI_SESSION,
+} from "@/lib/neftali";
+import {
   Brain,
   Target,
   BookOpen,
@@ -12,43 +17,43 @@ import {
   TrendingUp,
   Users,
   CheckCircle,
-  Star,
   ArrowRight,
   Award,
   Clock,
   ShieldCheck,
   GraduationCap,
   BarChart3,
+  MessageCircle,
 } from "lucide-react";
 
 export default function HomePage() {
   const modules = [
     {
       icon: Brain,
-      title: "Diagnóstico Cognitivo-Académico",
+      title: "Diagnóstico Académico",
       description:
-        "Evalúa tus fortalezas en pensamiento matemático, lectura crítica, atención ejecutiva y autorregulación.",
+        "Evalúa tus fortalezas en pensamiento matemático, lectura crítica, atención y autorregulación.",
       href: "/dashboard/diagnostic",
-      color: "text-blue-700",
-      bg: "bg-blue-50",
+      color: "text-[var(--color-brand-600)]",
+      bg: "bg-[var(--color-brand-50)]",
     },
     {
       icon: Target,
       title: "Plan de Estudio Adaptativo",
       description:
-        "Agenda semanal inteligente con técnica Pomodoro integrada y bloques de repetición espaciada.",
+        "Agenda semanal con técnica Pomodoro integrada y bloques de repetición espaciada.",
       href: "/dashboard/study-plan",
-      color: "text-emerald-700",
-      bg: "bg-emerald-50",
+      color: "text-[var(--color-accent-600)]",
+      bg: "bg-[var(--color-accent-50)]",
     },
     {
       icon: BookOpen,
       title: "Simulador EXANI-II & UAA",
       description:
-        "Reactivos comentados paso a paso con escala CENEVAL (700–1300) y retroalimentación inmediata.",
+        "Reactivos comentados paso a paso con porcentaje de aciertos y retroalimentación inmediata.",
       href: "/dashboard/exani",
-      color: "text-indigo-700",
-      bg: "bg-indigo-50",
+      color: "text-[#5C7A4A]",
+      bg: "bg-[#EEF2E6]",
     },
     {
       icon: Compass,
@@ -56,17 +61,19 @@ export default function HomePage() {
       description:
         "Perfil hexagonal de Holland con radar interactivo y compatibilidad con carreras universitarias.",
       href: "/dashboard/vocational",
-      color: "text-amber-700",
-      bg: "bg-amber-50",
+      color: "text-[#8A6D3B]",
+      bg: "bg-[#F3EDE0]",
+      image: "/images/neftali/brujula.png",
+      imageAlt: "Motivo dibujado a mano: una brújula en acuarela",
     },
     {
       icon: TrendingUp,
       title: "Bienestar y Autorregulación",
       description:
-        "Protocolos no clínicos de manejo del tiempo, claridad cognitiva y preparación ante exámenes.",
+        "Estrategias de manejo del tiempo, claridad y preparación ante exámenes.",
       href: "/dashboard/wellness",
-      color: "text-teal-700",
-      bg: "bg-teal-50",
+      color: "text-[var(--color-brand-600)]",
+      bg: "bg-[var(--color-brand-50)]",
     },
     {
       icon: Users,
@@ -74,46 +81,26 @@ export default function HomePage() {
       description:
         "Seguimiento respetuoso de hábitos y consistencia para padres, más talleres para instituciones.",
       href: "/schools",
-      color: "text-slate-700",
-      bg: "bg-slate-100",
+      color: "text-[var(--color-accent-600)]",
+      bg: "bg-[var(--color-accent-50)]",
     },
   ];
 
-  const testimonials = [
-    {
-      name: "María González",
-      role: "Estudiante UAA • Ingeniería",
-      content:
-        "Gracias a Conética mejoré mi puntaje en el EXANI-II en 15 puntos porcentuales. El diagnóstico inicial me mostró exactamente qué repasar.",
-      rating: 5,
-    },
-    {
-      name: "Carlos Ramírez",
-      role: "Padre de Familia • Aguascalientes",
-      content:
-        "El panel familiar me permite acompañar la constancia de mi hijo sin presionarlo ni invadir su autonomía.",
-      rating: 5,
-    },
-    {
-      name: "Ana Martínez",
-      role: "Estudiante • Medicina",
-      content:
-        "El perfil RIASEC y la asesoría vocacional me dieron claridad total antes de presentar mi examen de admisión.",
-      rating: 5,
-    },
-  ];
-
+  // NOTA: no hay testimonios en esta página. Los anteriores (María
+  // González, Carlos Ramírez, Ana Martínez, con cifras como "95%" o
+  // "500+ estudiantes") no estaban verificados y se retiraron. Cuando
+  // haya testimonios reales con permiso, van aquí.
   const stats = [
-    { value: "95%", label: "Tasa de admisión en primera opción" },
-    { value: "500+", label: "Estudiantes activos en Aguascalientes" },
-    { value: "4.9/5", label: "Satisfacción de estudiantes y familias" },
-    { value: "100%", label: "Metodologías basadas en evidencia" },
+    { value: "Ags. + en línea", label: "Aguascalientes y sesiones en línea" },
+    { value: "60 min", label: "Sesiones 1:1, académicas y de consultoría" },
+    { value: "5 diálogos", label: "Decisión, vocación, culpa, muerte y fe" },
+    { value: "Sin promesas", label: "Método y honestidad, sin resultados garantizados" },
   ];
 
   return (
     <div className="bg-[var(--color-surface-50)]">
-      {/* Hero Section */}
-      <section className="relative gradient-brand text-white overflow-hidden">
+      {/* Hero Section — fondo siempre crema (SISTEMA-VISUAL.md §5). */}
+      <section className="relative bg-[var(--color-surface-50)] overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <div className="grid lg:grid-cols-12 gap-12 items-center">
             {/* Left Copy */}
@@ -123,48 +110,50 @@ export default function HomePage() {
               transition={{ duration: 0.5 }}
               className="lg:col-span-6 space-y-6"
             >
-              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-emerald-300">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--color-brand-600)]">
                 <ShieldCheck size={16} />
-                <span>Plataforma Educativa Basada en Evidencia</span>
+                <span>Pensamiento aplicado a la vida real · NEFTALÍ</span>
               </div>
 
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white">
-                Aprende con método científico, alcanza tu admisión universitaria.
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[var(--color-brand-900)]">
+                Piensa bien antes de <span className="sketch-underline">decidir</span>.
               </h1>
 
-              <p className="text-lg sm:text-xl text-slate-200 leading-relaxed max-w-xl">
-                Diagnóstico cognitivo-académico, simuladores EXANI-II, orientación vocacional RIASEC y acompañamiento ético para estudiantes, familias e instituciones.
+              <p className="text-lg sm:text-xl text-[var(--color-text-muted)] leading-relaxed max-w-xl">
+                Diagnóstico académico, simuladores EXANI-II, orientación vocacional y consultoría filosófica para estudiantes, familias e instituciones. Sin falsas promesas: método, calma y honestidad.
               </p>
 
               <div className="flex flex-wrap gap-4 pt-2">
                 <Link href="/auth/register">
-                  <Button
-                    size="lg"
-                    className="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold shadow-lg shadow-emerald-950/30"
-                  >
-                    Comenzar Gratis
+                  <Button size="lg">
+                    Crear cuenta gratuita
                     <ArrowRight size={18} className="ml-2" />
                   </Button>
                 </Link>
                 <Link href="/services">
-                  <Button
-                    variant="outline"
-                    size="lg"
-                    className="border-white/30 text-white hover:bg-white/10 hover:text-white hover:border-white"
-                  >
+                  <Button variant="outline" size="lg">
                     Explorar Servicios
                   </Button>
                 </Link>
+                <a href={NEFTALI_CAL_COM_URL} target="_blank" rel="noopener noreferrer">
+                  <Button variant="outline" size="lg">
+                    Agendar sesión NEFTALÍ · $400
+                  </Button>
+                </a>
               </div>
 
-              <div className="pt-4 flex flex-wrap items-center gap-6 text-sm text-slate-300">
+              <div className="pt-4 flex flex-wrap items-center gap-6 text-sm text-[var(--color-text-muted)]">
                 <span className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-emerald-400" />
-                  Plan gratuito robusto
+                  <CheckCircle size={16} className="text-[var(--color-accent-600)]" />
+                  Plan gratuito para explorar
                 </span>
                 <span className="flex items-center gap-2">
-                  <CheckCircle size={16} className="text-emerald-400" />
+                  <CheckCircle size={16} className="text-[var(--color-accent-600)]" />
                   Servicio educativo (no clínico)
+                </span>
+                <span className="flex items-center gap-2">
+                  <CheckCircle size={16} className="text-[var(--color-accent-600)]" />
+                  {NEFTALI_SESSION.notTherapy}
                 </span>
               </div>
             </motion.div>
@@ -176,25 +165,25 @@ export default function HomePage() {
               transition={{ duration: 0.55, delay: 0.1 }}
               className="lg:col-span-6"
             >
-              <div className="relative rounded-2xl overflow-hidden border border-white/15 shadow-2xl bg-slate-900/40">
+              <div className="relative rounded-[12px] overflow-hidden border-2 border-[#14532D] shadow-lg bg-[#FBF8F1]">
                 <img
-                  src="/images/hero-illustration.jpg"
-                  alt="Ilustración editorial de aprendizaje científico, neurociencia aplicada y orientación académica en Conética Educativa"
+                  src="/images/neftali/heroe-decision.png"
+                  alt="Ilustración dibujada a mano: un joven de pelo rizado y suéter verde oscuro piensa ante un camino que se bifurca"
                   className="w-full h-auto object-cover"
                 />
-                <div className="p-5 bg-slate-950/85 backdrop-blur-md border-t border-white/10 flex flex-wrap items-center justify-between gap-4">
+                <div className="p-5 bg-[#EFE7D8] border-t-2 border-[#14532D] flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--color-brand-50)] text-[var(--color-brand-600)] flex items-center justify-center">
                       <BarChart3 size={20} />
                     </div>
                     <div>
-                      <div className="text-sm font-bold text-white">Simulador EXANI-II &amp; Perfil RIASEC</div>
-                      <div className="text-xs text-slate-300">Alineado a CENEVAL, SEP, OCDE y UNESCO</div>
+                      <div className="text-sm font-bold text-[var(--color-brand-900)]">Simulador EXANI-II &amp; Perfil RIASEC</div>
+                      <div className="text-xs text-[var(--color-text-muted)]">Alineado a guías de CENEVAL y SEP</div>
                     </div>
                   </div>
                   <Link
                     href="/auth/login"
-                    className="text-xs font-semibold text-emerald-300 hover:text-emerald-200 inline-flex items-center gap-1"
+                    className="text-xs font-semibold text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] inline-flex items-center gap-1"
                   >
                     Probar Demo <ArrowRight size={14} />
                   </Link>
@@ -204,13 +193,13 @@ export default function HomePage() {
           </div>
 
           {/* Stats Strip */}
-          <div className="mt-14 pt-10 border-t border-white/15 grid grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="mt-14 pt-10 border-t-[3px] border-[#14532D] grid grid-cols-2 lg:grid-cols-4 gap-8">
             {stats.map((stat, i) => (
               <div key={i}>
-                <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+                <div className="text-2xl sm:text-3xl font-extrabold text-[var(--color-brand-900)] tracking-tight">
                   {stat.value}
                 </div>
-                <div className="text-sm text-slate-300 mt-1">{stat.label}</div>
+                <div className="text-sm text-[var(--color-text-muted)] mt-1">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -218,45 +207,56 @@ export default function HomePage() {
       </section>
 
       {/* Value Proposition */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-b border-slate-200">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FBF8F1] border-b border-[#EFE7D8]">
         <div className="max-w-7xl mx-auto">
-          <div className="max-w-2xl mb-14">
-            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-4">
-              Ciencia cognitiva aplicada, sin pseudociencia ni falsas promesas
-            </h2>
-            <p className="text-lg text-slate-600">
-              Cada herramienta en Conética Educativa™ está fundamentada en investigación verificable sobre recuperación activa, práctica espaciada y funciones ejecutivas.
-            </p>
+          <div className="grid lg:grid-cols-12 gap-10 items-center mb-14">
+            <div className="lg:col-span-5">
+              <div className="rounded-[12px] overflow-hidden border-2 border-[#14532D] shadow-lg">
+                <img
+                  src="/images/neftali/libro-pregunta.png"
+                  alt="Ilustración dibujada a mano: un joven con un libro abierto y una nube de pensamiento"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            </div>
+            <div className="lg:col-span-7">
+              <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-4">
+                Pensar con método, sin falsas promesas
+              </h2>
+              <p className="text-lg text-slate-600">
+                Cada herramienta en Conética Educativa está pensada para que estudies y decidas con calma: recuperación activa, práctica espaciada y preguntas bien hechas.
+              </p>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             <div className="surface-card rounded-2xl p-7">
-              <div className="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-accent-50)] text-[var(--color-accent-600)] flex items-center justify-center mb-5">
                 <Award size={26} />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">100% Basado en Evidencia</h3>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Método, no magia</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Metodologías respaldadas por guías de CENEVAL, SEP, OCDE y literatura peer-reviewed en psicología educativa y neurociencia.
+                Metodologías de estudio y guías de CENEVAL y SEP. No prometemos resultados: el avance depende de tu constancia y de tu punto de partida.
               </p>
             </div>
 
             <div className="surface-card rounded-2xl p-7">
-              <div className="w-12 h-12 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[var(--color-brand-50)] text-[var(--color-brand-600)] flex items-center justify-center mb-5">
                 <Target size={26} />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Personalización Real</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Tu diagnóstico ajusta automáticamente las prioridades de estudio, metas semanales y simulacros recomendados.
+                Tu diagnóstico ajusta las prioridades de estudio, metas semanales y simulacros recomendados.
               </p>
             </div>
 
             <div className="surface-card rounded-2xl p-7">
-              <div className="w-12 h-12 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center mb-5">
+              <div className="w-12 h-12 rounded-xl bg-[#F3EDE0] text-[#8A6D3B] flex items-center justify-center mb-5">
                 <Clock size={26} />
               </div>
               <h3 className="text-xl font-bold text-slate-900 mb-2">Transparencia y Ética</h3>
               <p className="text-slate-600 text-sm leading-relaxed">
-                Protección estricta de datos bajo la LFPDPPP, respeto total a la autonomía del estudiante y claridad en nuestros alcances no clínicos.
+                Protección de datos bajo la LFPDPPP, respeto total a tu autonomía y claridad en nuestros alcances: servicio educativo, no clínico.
               </p>
             </div>
           </div>
@@ -286,9 +286,19 @@ export default function HomePage() {
             {modules.map((mod, i) => (
               <Link key={i} href={mod.href} className="group">
                 <div className="surface-card rounded-2xl p-7 h-full flex flex-col">
-                  <div className={`w-12 h-12 ${mod.bg} ${mod.color} rounded-xl flex items-center justify-center mb-5`}>
-                    <mod.icon size={24} />
-                  </div>
+                  {"image" in mod && mod.image ? (
+                    <div className="w-16 h-16 rounded-[12px] overflow-hidden border-2 border-[#14532D] mb-5">
+                      <img
+                        src={mod.image}
+                        alt={mod.imageAlt}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className={`w-12 h-12 ${mod.bg} ${mod.color} rounded-xl flex items-center justify-center mb-5`}>
+                      <mod.icon size={24} />
+                    </div>
+                  )}
                   <h3 className="text-xl font-bold text-slate-900 mb-2 group-hover:text-[var(--color-brand-600)] transition-colors">
                     {mod.title}
                   </h3>
@@ -310,13 +320,13 @@ export default function HomePage() {
       <InteractivePreview />
 
       {/* Schools / Institutional Showcase */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-white border-y border-slate-200">
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#FBF8F1] border-y border-[#EFE7D8]">
         <div className="max-w-7xl mx-auto grid lg:grid-cols-12 gap-12 items-center">
           <div className="lg:col-span-6">
-            <div className="rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+            <div className="rounded-[12px] overflow-hidden border-2 border-[#14532D] shadow-lg">
               <img
-                src="/images/schools-illustration.jpg"
-                alt="Talleres colaborativos y pensamiento crítico para escuelas e instituciones educativas"
+                src="/images/neftali/farol.png"
+                alt="Ilustración dibujada a mano: un joven con un farol en un sendero, símbolo de claridad"
                 className="w-full h-auto object-cover"
               />
             </div>
@@ -328,10 +338,10 @@ export default function HomePage() {
               <span>Para Colegios y Universidades</span>
             </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)]">
-              Lleva metodologías de alto impacto a tu institución
+              Lleva talleres para pensar bien a tu institución
             </h2>
             <p className="text-lg text-slate-600 leading-relaxed">
-              Impartimos talleres presenciales y virtuales sobre funciones ejecutivas, pensamiento crítico, proyecto de vida e inteligencia artificial ética para docentes en Aguascalientes y todo México.
+              Talleres presenciales y virtuales sobre pensamiento crítico, proyecto de vida y uso responsable de la inteligencia artificial para docentes y estudiantes en Aguascalientes y todo México.
             </p>
             <div className="grid sm:grid-cols-2 gap-4 pt-2">
               {[
@@ -341,7 +351,7 @@ export default function HomePage() {
                 "Proyecto de Vida y Vocación",
               ].map((item, idx) => (
                 <div key={idx} className="flex items-center gap-2.5 text-sm font-medium text-slate-800">
-                  <CheckCircle size={18} className="text-emerald-600 flex-shrink-0" />
+                  <CheckCircle size={18} className="text-[var(--color-accent-600)] flex-shrink-0" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -357,69 +367,94 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Testimonials */}
+      {/* Cinco diálogos NEFTALÍ */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center max-w-2xl mx-auto mb-14">
+            <div className="text-xs font-bold uppercase tracking-widest text-[var(--color-accent-600)] mb-3">
+              Consultoría filosófica NEFTALÍ
+            </div>
             <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)] mb-3">
-              Resultados respaldados por nuestra comunidad
+              Cinco diálogos para pensar tu vida
             </h2>
             <p className="text-slate-600 text-lg">
-              Estudiantes y familias que transformaron su forma de estudiar y decidir su futuro profesional.
+              Cuando la decisión no es solo académica, una sesión 1:1 para pensarla bien, con calma y con preguntas honestas. No es terapia ni coaching.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((t, i) => (
-              <div key={i} className="surface-card rounded-2xl p-7 flex flex-col justify-between">
-                <div>
-                  <div className="flex gap-1 mb-4">
-                    {[...Array(t.rating)].map((_, j) => (
-                      <Star key={j} size={16} className="text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                  <p className="text-slate-700 leading-relaxed mb-6">&ldquo;{t.content}&rdquo;</p>
-                </div>
-                <div className="pt-4 border-t border-slate-100">
-                  <div className="font-bold text-slate-900">{t.name}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{t.role}</div>
-                </div>
+          <div className="grid md:grid-cols-3 lg:grid-cols-5 gap-6">
+            {NEFTALI_DIALOGUES.map((d) => (
+              <div key={d.id} className="sketch-card p-6 flex flex-col">
+                <div className="text-lg font-bold text-[var(--color-brand-600)] mb-1">{d.title}</div>
+                <p className="font-bold text-slate-900 mb-2">&ldquo;{d.question}&rdquo;</p>
+                <p className="text-slate-600 text-sm leading-relaxed flex-1">{d.description}</p>
               </div>
             ))}
+          </div>
+
+          <div className="mt-10 max-w-3xl mx-auto sketch-card overflow-hidden text-center">
+            <img
+              src="/images/neftali/conversacion.png"
+              alt="Ilustración dibujada a mano: dos personas conversando con calma, con tazas en la mesa"
+              className="w-full h-auto object-cover border-b-2 border-[#14532D]"
+            />
+            <div className="p-7">
+            <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-1">
+              {NEFTALI_SESSION.name}
+            </div>
+            <div className="flex items-baseline justify-center gap-2 mb-2">
+              <span className="text-4xl font-extrabold text-[var(--color-brand-900)]">{NEFTALI_SESSION.priceLabel}</span>
+              <span className="text-slate-500 font-medium">· {NEFTALI_SESSION.duration} · {NEFTALI_SESSION.priceNote}</span>
+            </div>
+            <p className="text-sm text-slate-600 mb-1">{NEFTALI_SESSION.place}. {NEFTALI_SESSION.cancellation}.</p>
+            <p className="text-sm text-slate-600 mb-5">{NEFTALI_SESSION.referral}. {NEFTALI_SESSION.credentials}.</p>
+            <a href={NEFTALI_CAL_COM_URL} target="_blank" rel="noopener noreferrer">
+              <Button size="lg" className="gap-2">
+                <MessageCircle size={18} /> Agendar mi sesión
+              </Button>
+            </a>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Premium CTA */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 gradient-brand text-white">
+      {/* Premium CTA — sección alterna crema profunda, texto verde. */}
+      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-[#EFE7D8]">
         <div className="max-w-5xl mx-auto grid md:grid-cols-12 gap-10 items-center">
           <div className="md:col-span-7 space-y-5">
-            <div className="text-xs font-bold uppercase tracking-widest text-emerald-300">
+            <div className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand-600)]">
               Conética Premium
             </div>
-            <h2 className="text-3xl sm:text-4xl font-bold text-white">
-              Desbloquea todo el ecosistema sin límites
+            <h2 className="text-3xl sm:text-4xl font-bold text-[var(--color-brand-900)]">
+              Todo el ecosistema en un solo lugar
             </h2>
-            <p className="text-slate-200 text-lg">
-              Accede a simuladores ilimitados estilo EXANI-II, tu plan semanal adaptativo y orientación vocacional completa.
+            <p className="text-[var(--color-text-muted)] text-lg">
+              Accede a simuladores estilo EXANI-II, tu plan semanal adaptativo y orientación vocacional completa.
             </p>
-            <ul className="space-y-2.5 text-sm text-slate-100">
+            <ul className="space-y-2.5 text-sm text-[#14532D]">
               {[
                 "Acceso completo a los 6 módulos educativos",
-                "Simuladores EXANI-II cronometrados e ilimitados",
+                "Simuladores EXANI-II cronometrados",
                 "Reportes detallados de progreso y panel familiar",
                 "Cancela cuando quieras, sin plazos forzosos",
               ].map((feat, idx) => (
                 <li key={idx} className="flex items-center gap-2.5">
-                  <CheckCircle size={18} className="text-emerald-400 flex-shrink-0" />
+                  <CheckCircle size={18} className="text-[var(--color-accent-600)] flex-shrink-0" />
                   <span>{feat}</span>
                 </li>
               ))}
             </ul>
+            <p className="text-sm text-[var(--color-text-muted)] pt-2">
+              ¿Tu duda no es académica sino de vida? La sesión de consultoría filosófica NEFTALÍ es aparte: 60 min, $400 MXN IVA incluido, pago anticipado.{" "}
+              <a href={NEFTALI_CAL_COM_URL} target="_blank" rel="noopener noreferrer" className="font-semibold text-[var(--color-brand-700)] underline underline-offset-2">
+                Agenda aquí
+              </a>
+              .
+            </p>
           </div>
 
           <div className="md:col-span-5">
-            <div className="bg-white text-slate-900 rounded-2xl p-8 shadow-2xl text-center">
+            <div className="bg-[#FBF8F1] text-slate-900 rounded-[12px] border-2 border-[#14532D] p-8 shadow-xl text-center">
               <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider mb-2">
                 Membresía Mensual
               </div>
@@ -430,7 +465,7 @@ export default function HomePage() {
               <p className="text-xs text-slate-500 mb-6">Pagos seguros con Stripe y Mercado Pago</p>
 
               <Link href="/checkout?product=premium_monthly">
-                <Button className="w-full py-4 text-base gradient-accent text-white font-bold">
+                <Button className="w-full py-4 text-base">
                   Suscribirme Ahora <ArrowRight size={18} className="ml-2" />
                 </Button>
               </Link>

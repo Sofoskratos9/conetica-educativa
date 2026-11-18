@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
                     createUserNotification({
                         userId: session.user.id,
                         title: 'Resultado EXANI-II guardado',
-                        message: `Obtuviste ${Math.round(parsed.cenevalScore)} pts en escala CENEVAL (${parsed.correctCount}/${parsed.totalQuestions} aciertos en ${cleanArea}).`,
+                        message: `Obtuviste ${Math.round(parsed.cenevalScore)} pts de estimación de práctica (${parsed.correctCount}/${parsed.totalQuestions} aciertos en ${cleanArea}). No es un puntaje CENEVAL oficial.`,
                         type: 'success',
                         actionLink: '/dashboard/progress',
                     }),

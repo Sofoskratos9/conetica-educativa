@@ -23,7 +23,7 @@ function buildParentInsights(progress: StudentProgressSnapshot) {
     }
     if (progress.exaniLastScore !== null) {
         recentAchievements.push(
-            `Último simulacro EXANI-II: ${progress.exaniLastScore} pts en escala CENEVAL`
+            `Último simulacro EXANI-II: ${progress.exaniLastScore} pts (estimación de práctica, no oficial)`
         );
     }
     if (progress.vocational) {

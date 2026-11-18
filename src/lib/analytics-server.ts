@@ -121,7 +121,7 @@ export async function getStudentProgressSnapshot(userId: string): Promise<Studen
         psychometricResults: [],
         recommendations: [
             'Completa tu Diagnóstico Cognitivo-Académico inicial para obtener métricas y prioridades reales.',
-            'Realiza una práctica en el Simulador EXANI-II para estimar tu puntaje CENEVAL.',
+            'Realiza una práctica en el Simulador EXANI-II para medir tu porcentaje de aciertos.',
             'Registra tus metas semanales en Plan de Estudio y usa el temporizador Pomodoro.',
         ],
     };
@@ -406,7 +406,7 @@ export async function getStudentProgressSnapshot(userId: string): Promise<Studen
         }
     }
     if (exaniSessions.length === 0) {
-        recommendations.push('Realiza tu primer simulacro EXANI-II para estimar tu puntaje en escala CENEVAL.');
+        recommendations.push('Realiza tu primer simulacro EXANI-II para medir tu porcentaje de aciertos.');
     } else if (exaniLastScore !== null && exaniLastScore < 1100) {
         recommendations.push(`Tu último puntaje estimado fue ${exaniLastScore}. Practica reactivos específicos por área para subir arriba de 1,150.`);
     }

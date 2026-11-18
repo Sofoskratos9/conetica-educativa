@@ -100,12 +100,12 @@ const triggerBlobDownload = (blob: Blob, filename: string) => {
 
 export const downloadNeuroAudioWav = () => {
     const blob = synthesizeStereoWavBlob('neuro-focus', 180);
-    triggerBlobDownload(blob, 'Audio-Binaural-40Hz-Enfoque-Conetica.wav');
+    triggerBlobDownload(blob, 'Audio-para-Concentrarte-Conetica.wav');
 };
 
 export const downloadNsdrAudioWav = () => {
     const blob = synthesizeStereoWavBlob('nsdr-calm', 240);
-    triggerBlobDownload(blob, 'Protocolo-NSDR-AntiAnsiedad-Conetica.wav');
+    triggerBlobDownload(blob, 'Audio-Respiracion-para-Calmar-Conetica.wav');
 };
 
 /**

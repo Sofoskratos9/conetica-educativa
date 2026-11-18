@@ -166,7 +166,6 @@ export default function ExaniSimulatorPage() {
     if (finished) {
         const correctCount = questions.filter((q) => answers[q.id] === q.correctIndex).length;
         const pct = Math.round((correctCount / questions.length) * 100);
-        const cenevalScore = Math.round(700 + (correctCount / questions.length) * 600);
 
         return (
             <div className="max-w-3xl mx-auto space-y-6">
@@ -178,11 +177,7 @@ export default function ExaniSimulatorPage() {
                     <p className="text-slate-600">
                         Área evaluada: <strong>{selectedArea}</strong> ({cycle.shortCycleTag})
                     </p>
-                    <div className="grid grid-cols-3 gap-4 max-w-md mx-auto pt-4">
-                        <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
-                            <div className="text-2xl font-extrabold text-[var(--color-brand-600)]">{cenevalScore}</div>
-                            <div className="text-xs text-slate-500">Escala CENEVAL</div>
-                        </div>
+                    <div className="grid grid-cols-2 gap-4 max-w-md mx-auto pt-4">
                         <div className="p-4 rounded-xl bg-slate-50 border border-slate-200">
                             <div className="text-2xl font-extrabold text-emerald-600">{pct}%</div>
                             <div className="text-xs text-slate-500">Aciertos</div>
@@ -222,10 +217,10 @@ export default function ExaniSimulatorPage() {
                         {cycle.editionLabel}
                     </div>
                     <h1 className="text-3xl font-bold text-[var(--color-brand-900)] mt-0.5">
-                        Simulador EXANI-II &amp; Semáforo UAA
+                        Simulador EXANI-II y referencia UAA
                     </h1>
                     <p className="text-slate-600 mt-1 text-sm">
-                        Banco completo de {bank.length} reactivos comentados (incluyendo reactivos oficiales y personalizados por tu tutor).
+                        Banco completo de {bank.length} reactivos comentados (creados para practicar y personalizados por tu tutor).
                     </p>
                 </div>
             </div>
@@ -252,7 +247,7 @@ export default function ExaniSimulatorPage() {
                             : "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
                     }`}
                 >
-                    <Calculator size={16} /> Calculadora CENEVAL y Semáforo UAA
+                    <Calculator size={16} /> Calculadora de práctica y referencia UAA
                 </button>
             </div>
 
@@ -260,7 +255,7 @@ export default function ExaniSimulatorPage() {
                 <div className="surface-card rounded-2xl p-6 sm:p-8 space-y-6">
                     <div>
                         <h2 className="text-xl font-bold text-slate-900">
-                            Proyección de Puntaje CENEVAL y Corte UAA {cycle.targetAdmissionYear}
+                            Estimación de práctica y referencia de corte UAA {cycle.targetAdmissionYear}
                         </h2>
                         <p className="text-sm text-slate-500 mt-1">{EXAM_SOURCES_INFO.uaaWeighting}</p>
                     </div>
@@ -278,7 +273,7 @@ export default function ExaniSimulatorPage() {
                                 >
                                     {UAA_CAREERS.map((c) => (
                                         <option key={c.id} value={c.id}>
-                                            {c.label} — Meta {c.targetScore} pts
+                                            {c.label} — Meta referencial {c.targetScore} pts
                                         </option>
                                     ))}
                                 </select>
@@ -338,11 +333,11 @@ export default function ExaniSimulatorPage() {
                         <div className="space-y-4">
                             <div className="p-6 rounded-2xl bg-slate-900 text-white space-y-2">
                                 <div className="text-xs font-semibold uppercase tracking-wider text-emerald-400">
-                                    Puntaje Proyectado CENEVAL
+                                    Estimación de práctica
                                 </div>
                                 <div className="text-4xl font-extrabold">{estimatedCeneval} pts</div>
                                 <div className="text-xs text-slate-300">
-                                    {totalHits}/30 aciertos ({accuracyPct}%) · Meta carrera: {selectedCareer.targetScore} pts
+                                    {totalHits}/30 aciertos ({accuracyPct}%) · Meta referencial de la carrera: {selectedCareer.targetScore} pts (escala de referencia, no oficial)
                                 </div>
                                 <div
                                     className={`inline-block px-3 py-1 rounded-full text-xs font-bold mt-2 ${
@@ -355,6 +350,9 @@ export default function ExaniSimulatorPage() {
                                         ? `+${scoreDiff} pts por encima de la meta referencial`
                                         : `${Math.abs(scoreDiff)} pts por debajo de la meta referencial`}
                                 </div>
+                                <p className="text-xs text-slate-300 mt-2">
+                                    Estimación interna de práctica; no es un puntaje CENEVAL oficial ni garantiza admisión.
+                                </p>
                             </div>
 
                             <div className="p-5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2">

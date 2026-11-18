@@ -1,4 +1,4 @@
-// Ported & adapted from Sofoskratos9/psicometria (validated Mexican psychometric instruments)
+// Ported & adapted from Sofoskratos9/psicometria (cuestionarios de autoconocimiento adaptados; NO son instrumentos validados ni tienen valor diagnóstico)
 
 export type PsychometricTestId =
     | 'habitos_estudio_edaom'
@@ -57,7 +57,7 @@ const RAW_TESTS = {
     "habitos_estudio_edaom": {
         "id": "habitos_estudio_edaom",
         "name": "Inventario de Hábitos de Estudio (EDAOM)",
-        "description": "Evalúa las estrategias de aprendizaje y orientación motivacional en estudiantes. Validado para población mexicana.",
+        "description": "Evalúa las estrategias de aprendizaje y orientación motivacional en estudiantes. Cuestionario de autoconocimiento, no validado ni diagnóstico.",
         "category": "educativo",
         "questions": [
             {
@@ -554,7 +554,7 @@ const RAW_TESTS = {
     "orientacion_vocacional_chaside": {
         "id": "orientacion_vocacional_chaside",
         "name": "Test de Orientación Vocacional CHASIDE",
-        "description": "Evalúa intereses y aptitudes para orientación vocacional según el modelo CHASIDE. Validado para población mexicana.",
+        "description": "Evalúa intereses y aptitudes para orientación vocacional según el modelo CHASIDE. Cuestionario de autoconocimiento, no validado ni diagnóstico.",
         "category": "vocacional",
         "questions": [
             {
@@ -936,7 +936,7 @@ const RAW_TESTS = {
     "inteligencia_emocional_baron": {
         "id": "inteligencia_emocional_baron",
         "name": "Inventario de Inteligencia Emocional Bar-On ICE",
-        "description": "Evalúa la inteligencia emocional según el modelo de Bar-On. Validado para población mexicana.",
+        "description": "Evalúa la inteligencia emocional según el modelo de Bar-On. Cuestionario de autoconocimiento, no validado ni diagnóstico.",
         "category": "profesional",
         "questions": [
             {

@@ -144,7 +144,7 @@ export default function DashboardSettingsPage() {
                     </div>
                     <p className="text-sm text-slate-600">
                         {user?.isPremium
-                            ? "Tienes acceso ilimitado a simuladores EXANI-II y orientación RIASEC."
+                            ? "Tienes acceso a simuladores EXANI-II y orientación RIASEC."
                             : "Actualiza a Premium para desbloquear todos los simuladores y reportes."}
                     </p>
                 </div>

@@ -27,7 +27,7 @@ export default function TermsPage() {
                                     <strong>Conética Educativa™ NO es un servicio de salud mental ni clínico.</strong> Somos una plataforma educativa que ofrece:
                                 </p>
                                 <ul className="list-disc pl-6 space-y-1 text-gray-700">
-                                    <li>Estrategias de aprendizaje basadas en evidencia científica</li>
+                                    <li>Estrategias de aprendizaje con método y práctica guiada</li>
                                     <li>Diagnósticos académicos (NO psicológicos ni médicos)</li>
                                     <li>Orientación vocacional educativa (NO terapia)</li>
                                     <li>Técnicas de organización y autorregulación académica</li>

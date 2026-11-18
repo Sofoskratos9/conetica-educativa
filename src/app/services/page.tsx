@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PRODUCTS } from "@/lib/payment-service";
+import { NEFTALI_CAL_COM_URL, NEFTALI_SESSION } from "@/lib/neftali";
 import { Check, ArrowRight, Star, Zap, BookOpen, Users, Compass } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -9,15 +10,15 @@ export default function ServicesPage() {
     const getIcon = (id: string) => {
         switch (id) {
             case "premium_monthly":
-                return <Star className="text-amber-500 fill-amber-500" size={24} />;
+                return <Star className="text-[#D9A441] fill-[#D9A441]" size={24} />;
             case "program_4_sessions":
                 return <Users className="text-[var(--color-brand-600)]" size={24} />;
             case "single_session":
-                return <Zap className="text-orange-500" size={24} />;
+                return <Zap className="text-[var(--color-accent-600)]" size={24} />;
             case "vocational_pack":
-                return <Compass className="text-purple-600" size={24} />;
+                return <Compass className="text-[var(--color-brand-600)]" size={24} />;
             case "exani_prep":
-                return <BookOpen className="text-emerald-600" size={24} />;
+                return <BookOpen className="text-[#2E6B45]" size={24} />;
             default:
                 return <Star size={24} />;
         }
@@ -34,8 +35,40 @@ export default function ServicesPage() {
                         Nuestros Servicios Educativos
                     </h1>
                     <p className="text-lg md:text-xl text-slate-600 max-w-2xl mx-auto">
-                        Soluciones personalizadas y basadas en evidencia para cada etapa de tu desarrollo académico.
+                        Soluciones personalizadas para cada etapa de tu desarrollo académico.
                     </p>
+                </div>
+
+                {/* Sesión NEFTALÍ: oferta aparte, no es un producto de Conética */}
+                <div className="max-w-5xl mx-auto mb-12 sketch-card overflow-hidden">
+                    <div className="grid md:grid-cols-12 gap-0 items-stretch">
+                        <div className="md:col-span-4">
+                            <img
+                                src="/images/neftali/puerta.png"
+                                alt="Ilustración dibujada a mano: un joven ante una puerta entreabierta, símbolo de elegir"
+                                className="w-full h-full object-cover"
+                            />
+                        </div>
+                        <div className="md:col-span-8 p-7 sm:p-8">
+                            <div className="text-xs font-bold uppercase tracking-widest text-[var(--color-brand-600)] mb-2">
+                                Consultoría filosófica NEFTALÍ · Pensamiento aplicado a la vida real
+                            </div>
+                            <h2 className="text-2xl font-bold text-[var(--color-brand-900)] mb-2">
+                                {NEFTALI_SESSION.name}
+                            </h2>
+                            <p className="text-slate-600 mb-1">
+                                {NEFTALI_SESSION.duration}, {NEFTALI_SESSION.priceLabel} {NEFTALI_SESSION.priceNote.toLowerCase()}. {NEFTALI_SESSION.place}. {NEFTALI_SESSION.cancellation}.
+                            </p>
+                            <p className="text-sm text-slate-600 mb-5">
+                                {NEFTALI_SESSION.referral}. {NEFTALI_SESSION.notTherapy}. {NEFTALI_SESSION.credentials}.
+                            </p>
+                            <a href={NEFTALI_CAL_COM_URL} target="_blank" rel="noopener noreferrer">
+                                <Button size="lg" className="gap-2">
+                                    Agendar mi sesión · $400 <ArrowRight size={16} />
+                                </Button>
+                            </a>
+                        </div>
+                    </div>
                 </div>
 
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-7">
@@ -76,7 +109,7 @@ export default function ServicesPage() {
                             <ul className="space-y-3 mb-8 flex-1">
                                 {product.features.map((feature, i) => (
                                     <li key={i} className="flex items-start gap-3 text-sm text-slate-600">
-                                        <Check size={16} className="text-emerald-600 mt-0.5 flex-shrink-0" />
+                                        <Check size={16} className="text-[var(--color-accent-600)] mt-0.5 flex-shrink-0" />
                                         <span>{feature}</span>
                                     </li>
                                 ))}

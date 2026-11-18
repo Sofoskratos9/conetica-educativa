@@ -8,7 +8,7 @@
 4. Selecciona **"New repository"**
 5. Configura el repositorio:
    - **Repository name:** `conetica-educativa`
-   - **Description:** `Conética Educativa™ - Plataforma SaaS profesional, ética y 100% basada en evidencia científica para estudiantes, padres y escuelas en Aguascalientes`
+   - **Description:** `Conética Educativa™ - Plataforma educativa con método y práctica guiada para estudiantes, padres y escuelas en Aguascalientes`
    - **Visibility:** Public (o Private si prefieres)
    - ⚠️ **NO marques** "Initialize this repository with a README" (ya tenemos estos archivos)
 6. Haz clic en **"Create repository"**

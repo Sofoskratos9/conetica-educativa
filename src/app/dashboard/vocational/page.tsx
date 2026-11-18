@@ -22,7 +22,7 @@ export default function VocationalIntroPage() {
             <div className="grid md:grid-cols-3 gap-8 mb-12">
                 {[
                     { title: "Autoconocimiento", desc: "Entiende tus fortalezas y preferencias reales." },
-                    { title: "Evidencia Científica", desc: "Basado en la teoría de tipos de personalidad de Holland." },
+                    { title: "Teoría de Holland", desc: "Basado en la teoría de tipos de personalidad de Holland." },
                     { title: "Futuro Claro", desc: "Recibe sugerencias concretas de carreras y áreas de estudio." }
                 ].map((item, i) => (
                     <div key={i} className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm text-center">
