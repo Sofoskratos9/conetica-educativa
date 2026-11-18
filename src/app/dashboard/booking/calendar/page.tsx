@@ -15,6 +15,8 @@ function BookingCalendar() {
 
     const [selectedDate, setSelectedDate] = useState<Date>(new Date());
     const [selectedSlot, setSelectedSlot] = useState<TimeSlot | null>(null);
+    const [saving, setSaving] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     if (!service) {
         return <div>Servicio no encontrado. <Link href="/dashboard/booking">Volver</Link></div>;
@@ -25,19 +27,50 @@ function BookingCalendar() {
     const handleDateChange = (days: number) => {
         const newDate = new Date(selectedDate);
         newDate.setDate(newDate.getDate() + days);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const check = new Date(newDate);
+        check.setHours(0, 0, 0, 0);
+        if (check < today) return;
         setSelectedDate(newDate);
         setSelectedSlot(null);
     };
 
-    const handleConfirm = () => {
-        if (selectedSlot) {
-            // In a real app, save to DB here
-            const params = new URLSearchParams();
-            params.set('service', service.id);
-            params.set('date', selectedDate.toISOString());
-            params.set('time', selectedSlot.time);
-            router.push(`/dashboard/booking/confirmation?${params.toString()}`);
+    const handleConfirm = async () => {
+        if (!selectedSlot || saving) return;
+        setSaving(true);
+        setErrorMessage("");
+        const dateIso = selectedDate.toISOString().slice(0, 10);
+
+        try {
+            const res = await fetch('/api/appointments', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    serviceId: service.id,
+                    serviceName: service.title,
+                    scheduledDate: dateIso,
+                    scheduledTime: selectedSlot.time,
+                }),
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setErrorMessage(data.error || 'No se pudo guardar tu cita. Intenta de nuevo.');
+                setSaving(false);
+                return;
+            }
+        } catch {
+            setErrorMessage('Error de conexión al guardar la cita.');
+            setSaving(false);
+            return;
         }
+
+        const params = new URLSearchParams();
+        params.set('service', service.id);
+        params.set('date', selectedDate.toISOString());
+        params.set('time', selectedSlot.time);
+        router.push(`/dashboard/booking/confirmation?${params.toString()}`);
     };
 
     return (
@@ -125,13 +158,19 @@ function BookingCalendar() {
                 </div>
             </div>
 
+            {errorMessage && (
+                <div className="mt-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                    {errorMessage}
+                </div>
+            )}
+
             <div className="mt-8 flex justify-end">
                 <Button
-                    disabled={!selectedSlot}
+                    disabled={!selectedSlot || saving}
                     onClick={handleConfirm}
                     className="px-8 py-3 text-lg"
                 >
-                    Confirmar Reserva
+                    {saving ? "Guardando reserva..." : "Confirmar Reserva"}
                 </Button>
             </div>
         </div>

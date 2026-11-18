@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Compass, ShieldCheck, MapPin, Mail } from "lucide-react";
+import { Compass, ShieldCheck, MapPin, Mail, Phone } from "lucide-react";
 
 export function Footer() {
     return (
@@ -60,8 +60,24 @@ export function Footer() {
                                 <span>Aguascalientes, Ags., México</span>
                             </li>
                             <li className="flex items-center gap-2">
+                                <Phone size={16} className="text-emerald-400 flex-shrink-0" />
+                                <a
+                                    href="https://wa.me/5214494959259"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="hover:text-white transition-colors"
+                                >
+                                    WhatsApp: 449 495 9259
+                                </a>
+                            </li>
+                            <li className="flex items-center gap-2">
                                 <Mail size={16} className="text-emerald-400 flex-shrink-0" />
-                                <span>contacto@coneticaeducativa.com</span>
+                                <a
+                                    href="mailto:contacto@coneticaeducativa.com"
+                                    className="hover:text-white transition-colors"
+                                >
+                                    contacto@coneticaeducativa.com
+                                </a>
                             </li>
                         </ul>
                     </div>

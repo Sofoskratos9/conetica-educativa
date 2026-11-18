@@ -15,14 +15,15 @@ export interface WhatsAppTemplate {
     template: (data: any) => string;
 }
 
-// Your WhatsApp Business Number (set NEXT_PUBLIC_WHATSAPP_NUMBER in Vercel, e.g. 521449XXXXXXX)
-const RAW_WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || '')
+// Official Conética Educativa WhatsApp Business Number (overrideable via NEXT_PUBLIC_WHATSAPP_NUMBER)
+const DEFAULT_WHATSAPP_NUMBER = '5214494959259';
+const RAW_WHATSAPP_NUMBER = (process.env.NEXT_PUBLIC_WHATSAPP_NUMBER || DEFAULT_WHATSAPP_NUMBER)
     .replace(/\D/g, '');
 
 export const WHATSAPP_BUSINESS_NUMBER =
     RAW_WHATSAPP_NUMBER && RAW_WHATSAPP_NUMBER !== '5214491234567'
         ? RAW_WHATSAPP_NUMBER
-        : '';
+        : DEFAULT_WHATSAPP_NUMBER;
 
 export function isWhatsAppBusinessConfigured(): boolean {
     return Boolean(WHATSAPP_BUSINESS_NUMBER);

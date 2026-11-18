@@ -13,6 +13,8 @@ export default function DashboardSettingsPage() {
     const [phone, setPhone] = useState("");
     const [weeklyReminders, setWeeklyReminders] = useState(true);
     const [saved, setSaved] = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         const local = getCurrentUser();
@@ -28,10 +30,33 @@ export default function DashboardSettingsPage() {
         });
     }, []);
 
-    const handleSave = (e: React.FormEvent) => {
+    const handleSave = async (e: React.FormEvent) => {
         e.preventDefault();
-        setSaved(true);
-        setTimeout(() => setSaved(false), 3000);
+        setErrorMessage("");
+        setSaved(false);
+        setSaving(true);
+        try {
+            const res = await fetch("/api/profile", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name: displayName }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setErrorMessage(data.error || "No se pudieron guardar los cambios.");
+                return;
+            }
+            if (data.user) {
+                setUser(data.user);
+                await fetchServerSession();
+            }
+            setSaved(true);
+            setTimeout(() => setSaved(false), 3000);
+        } catch {
+            setErrorMessage("Error de conexión al guardar preferencias.");
+        } finally {
+            setSaving(false);
+        }
     };
 
     return (
@@ -44,6 +69,12 @@ export default function DashboardSettingsPage() {
                     Administra tu perfil, suscripción y preferencias de privacidad.
                 </p>
             </div>
+
+            {errorMessage && (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                    {errorMessage}
+                </div>
+            )}
 
             {saved && (
                 <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center gap-2">
@@ -87,7 +118,9 @@ export default function DashboardSettingsPage() {
                         <Bell size={16} className="text-slate-400" />
                         Recibir resumen semanal de hábitos y metas
                     </label>
-                    <Button type="submit">Guardar Cambios</Button>
+                    <Button type="submit" disabled={saving}>
+                        {saving ? "Guardando..." : "Guardar Cambios"}
+                    </Button>
                 </div>
             </form>
 

@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import { Calendar, Clock, User, CheckCircle, XCircle, RotateCcw } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Calendar, Clock, User, CheckCircle, XCircle, RotateCcw, RefreshCw } from "lucide-react";
 
 type AppointmentStatus = "confirmed" | "pending" | "cancelled";
 
 interface AppointmentItem {
-    id: number;
+    id: string;
     student: string;
     service: string;
     date: string;
@@ -14,21 +14,51 @@ interface AppointmentItem {
     status: AppointmentStatus;
 }
 
-const INITIAL_APPOINTMENTS: AppointmentItem[] = [
-    { id: 1, student: "Miguel López", service: "Mentoría Personalizada", date: "2025-12-10", time: "10:00", status: "confirmed" },
-    { id: 2, student: "Ana García", service: "Asesoría Vocacional", date: "2025-12-10", time: "11:30", status: "pending" },
-    { id: 3, student: "Carlos Ruiz", service: "Coaching EXANI-II", date: "2025-12-11", time: "16:00", status: "confirmed" },
-    { id: 4, student: "Sofía Díaz", service: "Apoyo Académico", date: "2025-12-12", time: "09:00", status: "cancelled" },
-];
-
 export default function AdminAppointmentsPage() {
-    const [appointments, setAppointments] = useState<AppointmentItem[]>(INITIAL_APPOINTMENTS);
+    const [appointments, setAppointments] = useState<AppointmentItem[]>([]);
     const [filter, setFilter] = useState<string>("all");
+    const [loading, setLoading] = useState<boolean>(true);
+    const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-    const updateStatus = (id: number, status: AppointmentStatus) => {
+    const loadAppointments = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch("/api/appointments");
+            if (res.ok) {
+                const data = await res.json();
+                const list: AppointmentItem[] = (data.appointments || []).map((a: any) => ({
+                    id: String(a.id),
+                    student: a.studentName || "Estudiante",
+                    service: a.serviceName || a.serviceId,
+                    date: a.scheduledDate,
+                    time: a.scheduledTime,
+                    status: a.status === "completed" ? "confirmed" : a.status,
+                }));
+                setAppointments(list);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    useEffect(() => {
+        loadAppointments();
+    }, []);
+
+    const updateStatus = async (id: string, status: AppointmentStatus) => {
+        setUpdatingId(id);
         setAppointments((prev) =>
             prev.map((app) => (app.id === id ? { ...app, status } : app))
         );
+        try {
+            await fetch("/api/appointments", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ id, status }),
+            });
+        } finally {
+            setUpdatingId(null);
+        }
     };
 
     const filteredAppointments =
@@ -43,16 +73,26 @@ export default function AdminAppointmentsPage() {
                     <h1 className="text-2xl font-bold text-slate-900">Gestión de Citas</h1>
                     <p className="text-sm text-slate-500">Confirma, reprograma o cancela sesiones 1:1 en tiempo real.</p>
                 </div>
-                <select
-                    className="bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                >
-                    <option value="all">Todas ({appointments.length})</option>
-                    <option value="confirmed">Confirmadas</option>
-                    <option value="pending">Pendientes</option>
-                    <option value="cancelled">Canceladas</option>
-                </select>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={loadAppointments}
+                        disabled={loading}
+                        className="inline-flex items-center gap-1.5 px-3 py-2 bg-white border border-slate-300 rounded-xl text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                        <RefreshCw size={15} className={loading ? "animate-spin" : ""} /> Actualizar
+                    </button>
+                    <select
+                        className="bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-[var(--color-brand-500)]"
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                    >
+                        <option value="all">Todas ({appointments.length})</option>
+                        <option value="confirmed">Confirmadas</option>
+                        <option value="pending">Pendientes</option>
+                        <option value="cancelled">Canceladas</option>
+                    </select>
+                </div>
             </div>
 
             <div className="surface-card overflow-hidden">
@@ -68,7 +108,19 @@ export default function AdminAppointmentsPage() {
                             </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-slate-100">
-                            {filteredAppointments.map((app) => (
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-500">
+                                        Cargando citas...
+                                    </td>
+                                </tr>
+                            ) : filteredAppointments.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-10 text-center text-sm text-slate-500">
+                                        No hay citas registradas en este filtro todavía.
+                                    </td>
+                                </tr>
+                            ) : filteredAppointments.map((app) => (
                                 <tr key={app.id} className="hover:bg-slate-50 transition-colors">
                                     <td className="px-6 py-4 whitespace-nowrap">
                                         <div className="flex items-center">
@@ -111,9 +163,10 @@ export default function AdminAppointmentsPage() {
                                             {app.status !== "confirmed" && (
                                                 <button
                                                     type="button"
+                                                    disabled={updatingId === app.id}
                                                     onClick={() => updateStatus(app.id, "confirmed")}
                                                     title="Confirmar cita"
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 text-xs font-semibold transition-colors"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 text-xs font-semibold transition-colors"
                                                 >
                                                     <CheckCircle size={14} /> Confirmar
                                                 </button>
@@ -121,9 +174,10 @@ export default function AdminAppointmentsPage() {
                                             {app.status !== "pending" && (
                                                 <button
                                                     type="button"
+                                                    disabled={updatingId === app.id}
                                                     onClick={() => updateStatus(app.id, "pending")}
                                                     title="Marcar pendiente"
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 text-xs font-semibold transition-colors"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 disabled:opacity-50 text-xs font-semibold transition-colors"
                                                 >
                                                     <RotateCcw size={14} /> Pendiente
                                                 </button>
@@ -131,9 +185,10 @@ export default function AdminAppointmentsPage() {
                                             {app.status !== "cancelled" && (
                                                 <button
                                                     type="button"
+                                                    disabled={updatingId === app.id}
                                                     onClick={() => updateStatus(app.id, "cancelled")}
                                                     title="Cancelar cita"
-                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 text-xs font-semibold transition-colors"
+                                                    className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-50 text-xs font-semibold transition-colors"
                                                 >
                                                     <XCircle size={14} /> Cancelar
                                                 </button>

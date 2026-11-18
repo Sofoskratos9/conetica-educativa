@@ -149,6 +149,10 @@ export async function middleware(request: NextRequest) {
         return applySecurityHeaders(redirectRes);
     }
 
+    if (pathname.startsWith('/api/')) {
+        return applySecurityHeaders(NextResponse.next());
+    }
+
     const userRole = verifiedSession.user.role;
     const allowedPrefixes = ROLE_ROUTES[userRole] || [];
     const hasAccess = allowedPrefixes.some(
