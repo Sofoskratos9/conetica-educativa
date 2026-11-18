@@ -125,6 +125,8 @@ export async function ensurePostgresSchema(): Promise<void> {
                 );
 
                 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_customer_id TEXT;
+                CREATE INDEX IF NOT EXISTS idx_users_stripe_customer_id ON users(stripe_customer_id);
 
                 CREATE TABLE IF NOT EXISTS transactions (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

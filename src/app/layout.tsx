@@ -49,8 +49,8 @@ export const metadata: Metadata = {
     images: [
       {
         url: "/images/neftali/heroe-decision.png",
-        width: 1920,
-        height: 1280,
+        width: 1264,
+        height: 848,
         alt: "Conética Educativa — Pensamiento aplicado a la vida real",
       },
     ],
