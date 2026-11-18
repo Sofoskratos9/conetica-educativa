@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
@@ -19,7 +19,6 @@ import {
 import { login, getRedirectPath } from "@/lib/auth-service";
 
 function LoginForm() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const redirectParam = searchParams.get("redirect");
 
@@ -59,8 +58,7 @@ function LoginForm() {
                 redirectParam && redirectParam.startsWith("/") && !redirectParam.startsWith("//")
                     ? redirectParam
                     : getRedirectPath(result.session.user.role);
-            router.push(safeRedirect);
-            router.refresh();
+            window.location.assign(safeRedirect);
         } catch {
             setError("Ocurrió un error al conectar con el servidor. Intenta de nuevo.");
             setIsLoading(false);

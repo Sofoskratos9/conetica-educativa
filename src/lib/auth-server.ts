@@ -139,14 +139,26 @@ async function ensurePrimaryAdminProvisioned(): Promise<void> {
     const adminInitialPassword = getConfiguredAdminInitialPassword();
 
     if (mode === 'postgres') {
-        await ensurePostgresSchema();
         const pool = getPgPool();
         if (!pool) return;
 
-        const existing = await pool.query<{ id: string; role: string; password_hash: string }>(
-            'SELECT id, role, password_hash FROM users WHERE email = $1 LIMIT 1',
-            [PRIMARY_ADMIN_EMAIL]
-        );
+        let existing;
+        try {
+            existing = await pool.query<{ id: string; role: string; password_hash: string }>(
+                'SELECT id, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+                [PRIMARY_ADMIN_EMAIL]
+            );
+        } catch (err: any) {
+            if (err?.code === '42P01') {
+                await ensurePostgresSchema();
+                existing = await pool.query<{ id: string; role: string; password_hash: string }>(
+                    'SELECT id, role, password_hash FROM users WHERE email = $1 LIMIT 1',
+                    [PRIMARY_ADMIN_EMAIL]
+                );
+            } else {
+                throw err;
+            }
+        }
 
         if (existing.rows.length > 0) {
             const row = existing.rows[0];

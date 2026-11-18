@@ -72,31 +72,46 @@ export async function login(
     email: string,
     password: string
 ): Promise<{ session?: AuthSession; error?: string }> {
-    const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15_000);
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        if (res.status >= 500) {
+    try {
+        const res = await fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password }),
+            signal: controller.signal,
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            if (res.status >= 500) {
+                return {
+                    error:
+                        data.error ||
+                        'Error interno del servidor. Intenta de nuevo en unos segundos.',
+                };
+            }
             return {
                 error:
                     data.error ||
-                    'Error interno del servidor. Intenta de nuevo en unos segundos.',
+                    'Credenciales inválidas. Verifica tu correo y contraseña.',
             };
         }
-        return {
-            error:
-                data.error ||
-                'Credenciales inválidas. Verifica tu correo y contraseña.',
-        };
-    }
 
-    const session: AuthSession = { user: data.user };
-    saveSession(session);
-    return { session };
+        const session: AuthSession = { user: data.user };
+        saveSession(session);
+        return { session };
+    } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+            return {
+                error: 'El servidor tardó demasiado en responder. Intenta de nuevo.',
+            };
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
+    }
 }
 
 export async function register(params: {
@@ -105,20 +120,35 @@ export async function register(params: {
     name: string;
     role: 'student' | 'parent';
 }): Promise<{ session?: AuthSession; error?: string }> {
-    const res = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(params),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15_000);
 
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) {
-        return { error: data.error || 'No se pudo completar el registro.' };
+    try {
+        const res = await fetch('/api/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(params),
+            signal: controller.signal,
+        });
+
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+            return { error: data.error || 'No se pudo completar el registro.' };
+        }
+
+        const session: AuthSession = { user: data.user };
+        saveSession(session);
+        return { session };
+    } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') {
+            return {
+                error: 'El servidor tardó demasiado en responder. Intenta de nuevo.',
+            };
+        }
+        throw err;
+    } finally {
+        clearTimeout(timeoutId);
     }
-
-    const session: AuthSession = { user: data.user };
-    saveSession(session);
-    return { session };
 }
 
 export async function logout(): Promise<void> {

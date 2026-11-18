@@ -64,8 +64,7 @@ export default function RegisterPage() {
                 return;
             }
 
-            router.push(getRedirectPath(result.session.user.role));
-            router.refresh();
+            window.location.assign(getRedirectPath(result.session.user.role));
         } catch {
             setError("Error de conexión al registrar tu cuenta.");
             setIsLoading(false);
