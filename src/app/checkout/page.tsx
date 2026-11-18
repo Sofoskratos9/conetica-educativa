@@ -88,7 +88,7 @@ function CheckoutForm() {
                 body: JSON.stringify({ productId: product.id }),
             });
 
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (res.status === 401) {
                 router.push(`/auth/login?redirect=${encodeURIComponent(`/checkout?product=${product.id}`)}`);

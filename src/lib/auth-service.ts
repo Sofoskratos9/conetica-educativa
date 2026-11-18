@@ -80,6 +80,13 @@ export async function login(
 
     const data = await res.json().catch(() => ({}));
     if (!res.ok) {
+        if (res.status >= 500) {
+            return {
+                error:
+                    data.error ||
+                    'Error interno del servidor. Intenta de nuevo en unos segundos.',
+            };
+        }
         return {
             error:
                 data.error ||
@@ -104,7 +111,7 @@ export async function register(params: {
         body: JSON.stringify(params),
     });
 
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) {
         return { error: data.error || 'No se pudo completar el registro.' };
     }

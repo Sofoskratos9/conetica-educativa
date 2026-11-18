@@ -26,12 +26,12 @@ export default function ForgotPasswordPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ email }),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 setError(data.error || "No se pudo procesar tu solicitud.");
             } else {
-                setMessage(data.message);
+                setMessage(data.message || "Solicitud procesada. Revisa tu bandeja de entrada.");
                 if (data.demoResetUrl) {
                     setDemoResetUrl(data.demoResetUrl);
                 }

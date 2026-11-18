@@ -1,24 +1,46 @@
 import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
 
 /**
- * Sanitization utilities to prevent XSS and injection attacks
+ * Sanitization utilities to prevent XSS and injection attacks.
+ * Uses pure JS implementation so serverless/edge runtimes never load jsdom.
  */
 
-// HTML sanitization
+const ALLOWED_BASIC_TAGS = new Set(['b', 'i', 'em', 'strong', 'p', 'br']);
+
+function escapeHtml(value: string): string {
+    return value
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+// HTML sanitization (keeps only safe basic formatting tags without attributes)
 export function sanitizeHtml(dirty: string): string {
-    return DOMPurify.sanitize(dirty, {
-        ALLOWED_TAGS: ['b', 'i', 'em', 'strong', 'p', 'br'],
-        ALLOWED_ATTR: []
+    const withoutDangerousBlocks = dirty
+        .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+        .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '');
+
+    return withoutDangerousBlocks.replace(/<\/?([a-zA-Z0-9-]+)(?:\s[^>]*)?>/g, (match, tagName: string) => {
+        const lower = tagName.toLowerCase();
+        if (!ALLOWED_BASIC_TAGS.has(lower)) {
+            return '';
+        }
+        const isClosing = match.startsWith('</');
+        if (lower === 'br') return '<br />';
+        return isClosing ? `</${lower}>` : `<${lower}>`;
     });
 }
 
-// Remove all HTML tags
+// Remove all HTML tags safely
 export function stripHtml(dirty: string): string {
-    return DOMPurify.sanitize(dirty, {
-        ALLOWED_TAGS: [],
-        ALLOWED_ATTR: []
-    });
+    return escapeHtml(
+        dirty
+            .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+            .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '')
+            .replace(/<[^>]+>/g, '')
+    );
 }
 
 // Sanitize user input (remove dangerous characters)
@@ -139,7 +161,7 @@ export function checkRateLimit(
 }
 
 // Clean up old rate limit records periodically
-setInterval(() => {
+const cleanupTimer = setInterval(() => {
     const now = Date.now();
     for (const [key, value] of rateLimitMap.entries()) {
         if (now > value.resetTime) {
@@ -147,6 +169,10 @@ setInterval(() => {
         }
     }
 }, 60000); // Clean up every minute
+
+if (typeof (cleanupTimer as unknown as { unref?: () => void }).unref === 'function') {
+    (cleanupTimer as unknown as { unref: () => void }).unref();
+}
 
 // Prevent timing attacks for string comparison
 export function secureCompare(a: string, b: string): boolean {

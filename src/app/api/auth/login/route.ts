@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
+        console.error('[Auth Login]', error);
         return NextResponse.json(
             { error: 'Error interno al iniciar sesión' },
             { status: 500 }

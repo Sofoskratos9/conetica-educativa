@@ -30,7 +30,7 @@ export default function SchoolsPage() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 setError(data.error || "No se pudo enviar la solicitud.");
                 setIsSubmitting(false);

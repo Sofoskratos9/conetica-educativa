@@ -27,18 +27,24 @@ export async function POST(request: NextRequest) {
 
         if (user) {
             const token = await createPasswordResetToken(user.email, user.passwordFingerprint);
+            const forwardedHost = request.headers.get('x-forwarded-host');
+            const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+            const requestOrigin = forwardedHost
+                ? `${forwardedProto}://${forwardedHost}`
+                : request.nextUrl.origin;
+
             const appUrl =
                 process.env.NEXT_PUBLIC_APP_URL &&
                 !process.env.NEXT_PUBLIC_APP_URL.includes('localhost')
                     ? process.env.NEXT_PUBLIC_APP_URL
-                    : request.nextUrl.origin ||
+                    : requestOrigin ||
                       process.env.NEXT_PUBLIC_APP_URL ||
                       'http://localhost:3000';
             const resetUrl = `${appUrl}/auth/reset-password?token=${encodeURIComponent(token)}`;
 
             const resendApiKey = process.env.RESEND_API_KEY;
             if (resendApiKey) {
-                await fetch('https://api.resend.com/emails', {
+                const resendRes = await fetch('https://api.resend.com/emails', {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${resendApiKey}`,
@@ -51,6 +57,9 @@ export async function POST(request: NextRequest) {
                         html: `<p>Hola ${user.name},</p><p>Recibimos una solicitud para restablecer tu contraseña. Haz clic en el siguiente enlace (válido por 30 minutos):</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Si no solicitaste este cambio, puedes ignorar este mensaje.</p>`,
                     }),
                 });
+                if (!resendRes.ok) {
+                    console.error('[ForgotPassword Resend]', resendRes.status);
+                }
             } else if (getDatabaseMode() === 'demo') {
                 // Only expose preview link for non-admin demo accounts in non-DB mode
                 const { PRIMARY_ADMIN_EMAIL } = await import('@/lib/db');

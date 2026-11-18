@@ -42,7 +42,7 @@ function ResetPasswordForm() {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ token, password }),
             });
-            const data = await res.json();
+            const data = await res.json().catch(() => ({}));
 
             if (!res.ok) {
                 setError(data.error || "No se pudo restablecer la contraseña.");
