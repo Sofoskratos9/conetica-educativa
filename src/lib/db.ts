@@ -289,9 +289,27 @@ export async function ensurePostgresSchema(): Promise<void> {
                     updated_at TIMESTAMPTZ DEFAULT NOW()
                 );
 
+                CREATE TABLE IF NOT EXISTS exani_questions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    area TEXT NOT NULL CHECK (area IN ('Pensamiento Matemático', 'Pensamiento Analítico', 'Estructura de la Lengua', 'Comprensión Lectora')),
+                    difficulty TEXT NOT NULL CHECK (difficulty IN ('Básico', 'Intermedio', 'Avanzado')),
+                    question TEXT NOT NULL,
+                    options JSONB NOT NULL,
+                    correct_index INTEGER NOT NULL CHECK (correct_index >= 0 AND correct_index <= 3),
+                    explanation TEXT NOT NULL,
+                    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+                    active BOOLEAN NOT NULL DEFAULT TRUE,
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_exani_questions_area ON exani_questions(area, active);
+
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
                 ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_reminders BOOLEAN DEFAULT TRUE;
                 ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS payload JSONB;
+                ALTER TABLE schools_inquiries ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'new';
+                ALTER TABLE schools_inquiries ADD COLUMN IF NOT EXISTS notes TEXT;
             `);
         })().catch((err) => {
             globalForPg.__coneticaPgSchemaReady = undefined;

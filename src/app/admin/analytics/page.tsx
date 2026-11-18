@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState, useCallback } from "react";
 import {
     Users,
@@ -11,6 +12,9 @@ import {
     RefreshCw,
     Calendar,
     Building2,
+    Sparkles,
+    GraduationCap,
+    ArrowRight,
 } from "lucide-react";
 import {
     ResponsiveContainer,
@@ -23,8 +27,10 @@ import {
     CartesianGrid,
     Tooltip,
 } from "recharts";
+import { getUaaCycleContext } from "@/lib/exam-cycle";
 
 type DateRange = "7d" | "30d" | "90d";
+type InquiryStatus = "new" | "contacted" | "demo_scheduled" | "closed";
 
 const RANGE_LABELS: Record<DateRange, string> = {
     "7d": "Últimos 7 días",
@@ -36,6 +42,9 @@ interface AdminOverviewData {
     range: DateRange;
     totalStudents: number;
     totalParents: number;
+    premiumUsersCount?: number;
+    customQuestionsCount?: number;
+    totalRevenueMxn?: number;
     activeUsers: number;
     retentionRate: number;
     completionRate: number;
@@ -45,6 +54,7 @@ interface AdminOverviewData {
     moduleCompletionRates: { name: string; rate: number; count: number }[];
     activityTrend: { week: string; activos: number; sesiones: number }[];
     studentsAtRisk: { id: string; name: string; email: string; issue: string; lastActive: string }[];
+    psychometricResults?: unknown[];
     recentUsers: { id: string; name: string; email: string; role: string; isPremium: boolean; createdAt: string }[];
     schoolInquiries: {
         id: string;
@@ -55,11 +65,14 @@ interface AdminOverviewData {
         email: string;
         phone: string;
         interest: string;
+        status?: InquiryStatus;
+        notes?: string;
         createdAt: string;
     }[];
 }
 
 export default function AdminAnalyticsPage() {
+    const cycle = getUaaCycleContext();
     const [range, setRange] = useState<DateRange>("7d");
     const [data, setData] = useState<AdminOverviewData | null>(null);
     const [loading, setLoading] = useState(true);
@@ -88,6 +101,24 @@ export default function AdminAnalyticsPage() {
         loadOverview(range);
     }, [range, loadOverview]);
 
+    const handleInquiryStatus = async (id: string, status: InquiryStatus) => {
+        setData((prev) =>
+            prev
+                ? {
+                      ...prev,
+                      schoolInquiries: prev.schoolInquiries.map((inq) =>
+                          inq.id === id ? { ...inq, status } : inq
+                      ),
+                  }
+                : prev
+        );
+        await fetch("/api/admin/overview", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, status }),
+        }).catch(() => {});
+    };
+
     const handleExportCSV = () => {
         if (!data) return;
         const rows = [
@@ -95,6 +126,8 @@ export default function AdminAnalyticsPage() {
             `Rango,"${RANGE_LABELS[range]}"`,
             `Estudiantes Registrados,${data.totalStudents}`,
             `Padres Registrados,${data.totalParents}`,
+            `Cuentas PRO Activas,${data.premiumUsersCount ?? 0}`,
+            `Ingresos Confirmados MXN,${data.totalRevenueMxn ?? 0}`,
             `Estudiantes Activos,${data.activeUsers}`,
             `Tasa de Actividad,${data.retentionRate}%`,
             `Finalizacion Promedio Modulos,${data.completionRate}%`,
@@ -119,6 +152,30 @@ export default function AdminAnalyticsPage() {
 
     return (
         <div className="space-y-8">
+            {/* Cycle & Quick Actions Banner */}
+            <div className="rounded-2xl bg-slate-900 text-white p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div>
+                    <div className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+                        {cycle.editionLabel}
+                    </div>
+                    <p className="text-sm text-slate-200 mt-0.5">{cycle.uaaPhaseLabel}</p>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                    <Link
+                        href="/admin/users"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold transition-colors"
+                    >
+                        <Users size={14} /> Usuarios y Avisos <ArrowRight size={13} />
+                    </Link>
+                    <Link
+                        href="/admin/questions"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-500 text-slate-950 hover:bg-emerald-400 text-xs font-bold transition-colors"
+                    >
+                        <GraduationCap size={14} /> Banco EXANI ({50 + (data?.customQuestionsCount ?? 0)})
+                    </Link>
+                </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Analíticas de la Plataforma</h1>
@@ -375,12 +432,29 @@ export default function AdminAnalyticsPage() {
                             Aún no hay solicitudes institucionales registradas.
                         </div>
                     ) : (
-                        <div className="divide-y divide-slate-100 max-h-80 overflow-y-auto">
+                        <div className="divide-y divide-slate-100 max-h-96 overflow-y-auto">
                             {data.schoolInquiries.map((inq) => (
-                                <div key={inq.id} className="px-6 py-3.5 space-y-1">
-                                    <div className="flex items-center justify-between gap-2">
-                                        <p className="text-sm font-semibold text-slate-900">{inq.school}</p>
-                                        <span className="text-xs font-mono text-slate-400">{inq.referenceId}</span>
+                                <div key={inq.id} className="px-6 py-4 space-y-2">
+                                    <div className="flex flex-wrap items-center justify-between gap-2">
+                                        <div>
+                                            <p className="text-sm font-semibold text-slate-900">{inq.school}</p>
+                                            <span className="text-xs font-mono text-slate-400">
+                                                {inq.referenceId} · {inq.createdAt}
+                                            </span>
+                                        </div>
+                                        <select
+                                            value={inq.status || "new"}
+                                            onChange={(e) =>
+                                                handleInquiryStatus(inq.id, e.target.value as InquiryStatus)
+                                            }
+                                            aria-label={`Estado de ${inq.school}`}
+                                            className="px-2.5 py-1 rounded-lg border border-slate-200 text-xs font-semibold bg-white"
+                                        >
+                                            <option value="new">Nueva</option>
+                                            <option value="contacted">Contactada</option>
+                                            <option value="demo_scheduled">Demo Agendada</option>
+                                            <option value="closed">Cerrada</option>
+                                        </select>
                                     </div>
                                     <p className="text-xs text-slate-600">
                                         {inq.name} ({inq.position}) · {inq.interest}
@@ -392,6 +466,37 @@ export default function AdminAnalyticsPage() {
                             ))}
                         </div>
                     )}
+                </div>
+            </div>
+
+            {/* Extra Platform Metrics Row */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="surface-card p-4 flex items-center justify-between">
+                    <div>
+                        <div className="text-xs text-slate-500">Cuentas PRO</div>
+                        <div className="text-xl font-bold text-slate-900 mt-0.5">
+                            {data?.premiumUsersCount ?? 0}
+                        </div>
+                    </div>
+                    <Sparkles size={18} className="text-emerald-600" />
+                </div>
+                <div className="surface-card p-4">
+                    <div className="text-xs text-slate-500">Pruebas Psicométricas</div>
+                    <div className="text-xl font-bold text-slate-900 mt-0.5">
+                        {data?.psychometricResults?.length ?? 0}
+                    </div>
+                </div>
+                <div className="surface-card p-4">
+                    <div className="text-xs text-slate-500">Reactivos EXANI Activos</div>
+                    <div className="text-xl font-bold text-slate-900 mt-0.5">
+                        {50 + (data?.customQuestionsCount ?? 0)}
+                    </div>
+                </div>
+                <div className="surface-card p-4">
+                    <div className="text-xs text-slate-500">Ingresos Pagos (MXN)</div>
+                    <div className="text-xl font-bold text-emerald-700 mt-0.5">
+                        ${(data?.totalRevenueMxn ?? 0).toLocaleString("es-MX")}
+                    </div>
                 </div>
             </div>
 

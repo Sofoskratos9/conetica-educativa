@@ -2,7 +2,18 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { BarChart as BarIcon, Clock, Award, TrendingUp, AlertCircle, CheckCircle, ArrowRight } from "lucide-react";
+import {
+    BarChart as BarIcon,
+    Clock,
+    Award,
+    TrendingUp,
+    AlertCircle,
+    CheckCircle,
+    ArrowRight,
+    Trophy,
+    Lock,
+    ClipboardCheck,
+} from "lucide-react";
 import {
     ResponsiveContainer,
     BarChart,
@@ -13,6 +24,7 @@ import {
     CartesianGrid,
 } from "recharts";
 import type { StudentProgressSnapshot } from "@/lib/analytics-server";
+import { computeRealGamification } from "@/lib/gamification";
 
 export default function ProgressDashboardPage() {
     const [data, setData] = useState<StudentProgressSnapshot | null>(null);
@@ -26,6 +38,8 @@ export default function ProgressDashboardPage() {
             })
             .finally(() => setLoading(false));
     }, []);
+
+    const gamification = data ? computeRealGamification(data) : null;
 
     return (
         <div className="space-y-8 max-w-6xl mx-auto">
@@ -77,6 +91,68 @@ export default function ProgressDashboardPage() {
                 </div>
             </div>
 
+            {/* Real XP & Badges Section */}
+            {gamification && (
+                <div className="surface-card p-6 rounded-2xl space-y-5">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <div className="p-3 rounded-xl bg-amber-100 text-amber-700">
+                                <Trophy size={22} />
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-slate-900 text-lg">
+                                    Logros, Nivel XP e Insignias Desbloqueadas
+                                </h2>
+                                <p className="text-xs text-slate-500">
+                                    Nivel {gamification.level}: <strong>{gamification.levelName}</strong> ·{" "}
+                                    <strong>{gamification.totalXp} XP reales</strong> ({gamification.unlockedCount}/10 insignias)
+                                </p>
+                            </div>
+                        </div>
+                        <div className="md:w-64">
+                            <div className="flex justify-between text-xs font-semibold text-slate-500 mb-1">
+                                <span>Avance al siguiente nivel</span>
+                                <span>{gamification.progressToNextPct}%</span>
+                            </div>
+                            <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-amber-500 to-blue-600 rounded-full"
+                                    style={{ width: `${gamification.progressToNextPct}%` }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        {gamification.badges.map((badge) => (
+                            <div
+                                key={badge.id}
+                                className={`p-4 rounded-xl border transition-all ${
+                                    badge.unlocked
+                                        ? "bg-amber-50/70 border-amber-200 text-slate-900"
+                                        : "bg-slate-50/70 border-slate-200/80 text-slate-400"
+                                }`}
+                            >
+                                <div className="flex items-center justify-between mb-2">
+                                    <span className="text-[11px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded bg-white border border-slate-200 text-slate-600">
+                                        +{badge.xpBonus} XP
+                                    </span>
+                                    {badge.unlocked ? (
+                                        <CheckCircle size={16} className="text-emerald-600" />
+                                    ) : (
+                                        <Lock size={15} className="text-slate-400" />
+                                    )}
+                                </div>
+                                <h3 className={`text-sm font-bold ${badge.unlocked ? "text-slate-900" : "text-slate-500"}`}>
+                                    {badge.name}
+                                </h3>
+                                <p className="text-xs mt-1 leading-snug">{badge.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <div className="grid md:grid-cols-3 gap-8">
                 {/* Interactive Weekly Bar Chart */}
                 <div className="md:col-span-2 surface-card p-6 rounded-2xl">
@@ -118,6 +194,52 @@ export default function ProgressDashboardPage() {
                         ))}
                     </ul>
                 </div>
+            </div>
+
+            {/* Psychometric Results Summary */}
+            <div className="surface-card p-6 rounded-2xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h2 className="font-bold text-slate-900 flex items-center gap-2">
+                        <ClipboardCheck className="text-indigo-600" size={20} /> Evaluaciones Psicométricas Validadas
+                    </h2>
+                    <Link
+                        href="/dashboard/psychometrics"
+                        className="text-xs font-bold text-[var(--color-brand-600)] hover:underline inline-flex items-center gap-1"
+                    >
+                        Ir a Batería Psicométrica <ArrowRight size={14} />
+                    </Link>
+                </div>
+
+                {!data?.psychometricResults || data.psychometricResults.length === 0 ? (
+                    <div className="p-5 rounded-xl bg-slate-50 border border-slate-200 text-sm text-slate-600 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <span>Aún no has completado ninguna evaluación psicométrica (EDAOM, VAK, CHASIDE o Bar-On).</span>
+                        <Link
+                            href="/dashboard/psychometrics"
+                            className="px-4 py-2 rounded-xl bg-indigo-600 text-white text-xs font-bold hover:bg-indigo-700 w-fit"
+                        >
+                            Realizar evaluación
+                        </Link>
+                    </div>
+                ) : (
+                    <div className="grid md:grid-cols-2 gap-4">
+                        {data.psychometricResults.map((res) => (
+                            <div key={res.testId} className="p-4 rounded-xl border border-slate-200 bg-slate-50/60 space-y-2">
+                                <div className="flex items-start justify-between gap-2">
+                                    <div>
+                                        <h3 className="font-bold text-slate-900 text-sm">{res.testName}</h3>
+                                        <p className="text-xs text-slate-500">
+                                            Fortaleza principal: <strong className="text-indigo-700">{res.topDimension}</strong>
+                                        </p>
+                                    </div>
+                                    <span className="px-2.5 py-1 rounded-full text-xs font-extrabold bg-indigo-100 text-indigo-800">
+                                        {res.globalPercentage}%
+                                    </span>
+                                </div>
+                                <p className="text-xs text-slate-600">{res.recommendation}</p>
+                            </div>
+                        ))}
+                    </div>
+                )}
             </div>
 
             {/* History Table */}
@@ -183,3 +305,4 @@ export default function ProgressDashboardPage() {
         </div>
     );
 }
+

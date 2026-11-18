@@ -18,6 +18,7 @@ import {
     X,
     Sparkles,
     ShieldCheck,
+    ClipboardCheck,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
@@ -55,6 +56,7 @@ export default function DashboardLayout({
         { name: "Plan de Estudio", href: "/dashboard/study-plan", icon: BookOpen },
         { name: "Práctica EXANI", href: "/dashboard/exani", icon: TrendingUp },
         { name: "Vocacional RIASEC", href: "/dashboard/vocational", icon: Compass },
+        { name: "Psicometría", href: "/dashboard/psychometrics", icon: ClipboardCheck },
         { name: "Bienestar", href: "/dashboard/wellness", icon: Activity },
         { name: "Mi Progreso", href: "/dashboard/progress", icon: BarChart3 },
         { name: "Agendar 1:1", href: "/dashboard/booking", icon: Calendar },

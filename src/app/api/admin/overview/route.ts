@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { SESSION_COOKIE_NAME, verifySessionToken } from '@/lib/session';
-import { ensurePostgresSchema, getDatabaseMode, getPgPool } from '@/lib/db';
+import { ensurePostgresSchema, getDatabaseMode, getPgPool, logActivityEvent } from '@/lib/db';
+import { sanitizeInput } from '@/lib/security/sanitization';
 
 const RIASEC_LABELS: Record<string, string> = {
     R: 'Realista',
@@ -10,6 +12,12 @@ const RIASEC_LABELS: Record<string, string> = {
     E: 'Emprendedor',
     C: 'Convencional',
 };
+
+const PatchInquirySchema = z.object({
+    id: z.string().uuid(),
+    status: z.enum(['new', 'contacted', 'demo_scheduled', 'closed']),
+    notes: z.string().max(600).optional(),
+});
 
 export async function GET(request: NextRequest) {
     const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
@@ -28,6 +36,9 @@ export async function GET(request: NextRequest) {
         range: rangeParam === '90d' ? '90d' : rangeParam === '30d' ? '30d' : '7d',
         totalStudents: 0,
         totalParents: 0,
+        premiumUsersCount: 0,
+        customQuestionsCount: 0,
+        totalRevenueMxn: 0,
         activeUsers: 0,
         retentionRate: 0,
         completionRate: 0,
@@ -49,6 +60,7 @@ export async function GET(request: NextRequest) {
         ],
         studentsAtRisk: [],
         vocationalResults: [],
+        psychometricResults: [],
         activityLogs: [],
         recentUsers: [],
         schoolInquiries: [],
@@ -71,6 +83,8 @@ export async function GET(request: NextRequest) {
             appointmentsRes,
             inquiriesRes,
             logsRes,
+            customQRes,
+            txRes,
         ] = await Promise.all([
             pool.query<{
                 id: string;
@@ -115,12 +129,8 @@ export async function GET(request: NextRequest) {
                 user_id: string;
                 completed: boolean;
                 updated_at: Date | string;
-            }>(
-                `SELECT user_id, completed, updated_at FROM study_tasks`
-            ),
-            pool.query<{ status: string }>(
-                `SELECT status FROM appointments`
-            ),
+            }>(`SELECT user_id, completed, updated_at FROM study_tasks`),
+            pool.query<{ status: string }>(`SELECT status FROM appointments`),
             pool.query<{
                 id: string;
                 reference_id: string;
@@ -130,12 +140,14 @@ export async function GET(request: NextRequest) {
                 email: string;
                 phone: string;
                 interest: string;
+                status: string | null;
+                notes: string | null;
                 created_at: Date | string;
             }>(
-                `SELECT id, reference_id, name, school, position, email, phone, interest, created_at
+                `SELECT id, reference_id, name, school, position, email, phone, interest, status, notes, created_at
                  FROM schools_inquiries
                  ORDER BY created_at DESC
-                 LIMIT 20`
+                 LIMIT 30`
             ),
             pool.query<{
                 id: string;
@@ -150,6 +162,10 @@ export async function GET(request: NextRequest) {
                  FROM activity_logs
                  ORDER BY created_at DESC
                  LIMIT 50`
+            ),
+            pool.query<{ cnt: string }>(`SELECT COUNT(*)::text AS cnt FROM exani_questions WHERE active = true`),
+            pool.query<{ total: string | null }>(
+                `SELECT COALESCE(SUM(amount), 0)::text AS total FROM transactions WHERE status = 'completed'`
             ),
         ]);
 
@@ -387,6 +403,23 @@ export async function GET(request: NextRequest) {
                 createdAt: new Date(u.created_at).toISOString().slice(0, 10),
             }));
 
+        const psychometricResults = progressRes.rows
+            .filter((p) => p.module_id === 'psychometric' && p.payload)
+            .map((p) => {
+                const owner = userById.get(p.user_id);
+                return {
+                    id: p.id,
+                    student: owner?.name || 'Estudiante',
+                    email: owner?.email || '',
+                    testId: String(p.payload?.testId || p.lesson_id),
+                    testName: String(p.payload?.testName || p.lesson_id),
+                    date: String(p.payload?.completedAt || p.updated_at).slice(0, 10),
+                    globalPercentage: Number(p.payload?.globalPercentage ?? p.score ?? 0),
+                    topDimension: String(p.payload?.topDimension || 'General'),
+                    dimensions: Array.isArray(p.payload?.dimensions) ? p.payload.dimensions : [],
+                };
+            });
+
         const schoolInquiries = inquiriesRes.rows.map((s) => ({
             id: s.id,
             referenceId: s.reference_id,
@@ -396,13 +429,22 @@ export async function GET(request: NextRequest) {
             email: s.email,
             phone: s.phone,
             interest: s.interest,
+            status: (s.status || 'new') as 'new' | 'contacted' | 'demo_scheduled' | 'closed',
+            notes: s.notes || '',
             createdAt: new Date(s.created_at).toISOString().slice(0, 10),
         }));
+
+        const premiumUsersCount = usersRes.rows.filter((u) => u.is_premium && u.role !== 'admin').length;
+        const customQuestionsCount = Number(customQRes.rows[0]?.cnt || 0);
+        const totalRevenueMxn = Number(txRes.rows[0]?.total || 0);
 
         return NextResponse.json({
             range: rangeParam === '90d' ? '90d' : rangeParam === '30d' ? '30d' : '7d',
             totalStudents,
             totalParents: parents.length,
+            premiumUsersCount,
+            customQuestionsCount,
+            totalRevenueMxn,
             activeUsers,
             retentionRate,
             completionRate,
@@ -413,6 +455,7 @@ export async function GET(request: NextRequest) {
             activityTrend,
             studentsAtRisk,
             vocationalResults,
+            psychometricResults,
             activityLogs,
             recentUsers,
             schoolInquiries,
@@ -423,5 +466,57 @@ export async function GET(request: NextRequest) {
             { error: 'No se pudieron calcular las analíticas de la plataforma.' },
             { status: 500 }
         );
+    }
+}
+
+export async function PATCH(request: NextRequest) {
+    const token = request.cookies.get(SESSION_COOKIE_NAME)?.value;
+    const session = await verifySessionToken(token);
+    if (!session) {
+        return NextResponse.json({ error: 'No autenticado.' }, { status: 401 });
+    }
+    if (session.user.role !== 'admin') {
+        return NextResponse.json({ error: 'Acceso restringido a administradores.' }, { status: 403 });
+    }
+
+    if (getDatabaseMode() !== 'postgres') {
+        return NextResponse.json({ error: 'Base de datos no disponible.' }, { status: 503 });
+    }
+
+    try {
+        const body = await request.json();
+        const parsed = PatchInquirySchema.parse(body);
+
+        await ensurePostgresSchema();
+        const pool = getPgPool();
+        if (!pool) return NextResponse.json({ error: 'Base de datos no disponible.' }, { status: 503 });
+
+        const cleanNotes = parsed.notes !== undefined ? sanitizeInput(parsed.notes) : undefined;
+        const res = await pool.query<{ school: string; reference_id: string }>(
+            `UPDATE schools_inquiries
+             SET status = $1, notes = COALESCE($2, notes)
+             WHERE id = $3
+             RETURNING school, reference_id`,
+            [parsed.status, cleanNotes ?? null, parsed.id]
+        );
+
+        if (res.rowCount === 0) {
+            return NextResponse.json({ error: 'Solicitud no encontrada.' }, { status: 404 });
+        }
+
+        await logActivityEvent({
+            userId: session.user.id,
+            userName: session.user.name,
+            eventType: 'admin_inquiry_updated',
+            action: `Actualizó lead B2B ${res.rows[0].school} (${res.rows[0].reference_id}) a estado "${parsed.status}"`,
+        });
+
+        return NextResponse.json({ success: true });
+    } catch (error) {
+        if (error instanceof z.ZodError) {
+            return NextResponse.json({ error: 'Estado o datos de solicitud inválidos.' }, { status: 400 });
+        }
+        console.error('[Admin Overview PATCH]', error);
+        return NextResponse.json({ error: 'No se pudo actualizar la solicitud B2B.' }, { status: 500 });
     }
 }

@@ -11,6 +11,9 @@ import {
     Compass,
     BookOpen,
     Calendar,
+    Trophy,
+    ClipboardCheck,
+    GraduationCap,
 } from "lucide-react";
 import {
     ResponsiveContainer,
@@ -23,6 +26,8 @@ import {
 } from "recharts";
 import { getCurrentUser, fetchServerSession, type User } from "@/lib/auth-service";
 import type { StudentProgressSnapshot } from "@/lib/analytics-server";
+import { computeRealGamification } from "@/lib/gamification";
+import { getUaaCycleContext } from "@/lib/exam-cycle";
 
 export default function DashboardPage() {
     const [user, setUser] = useState<User | null>(null);
@@ -55,9 +60,13 @@ export default function DashboardPage() {
 
     const diagnosticDone = Boolean(progress?.diagnostic);
     const vocationalDone = Boolean(progress?.vocational);
+    const psychometricCount = progress?.psychometricResults?.length ?? 0;
     const completedCount = progress?.modulesCompleted ?? 0;
     const totalModules = progress?.totalModules ?? 5;
     const pctModules = Math.round((completedCount / totalModules) * 100);
+
+    const gamification = progress ? computeRealGamification(progress) : null;
+    const uaaCycle = getUaaCycleContext();
 
     const firstName = user?.name?.split(" ")[0] || "Estudiante";
 
@@ -66,6 +75,10 @@ export default function DashboardPage() {
             {/* Welcome Section */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 text-[var(--color-brand-700)] text-xs font-bold mb-2 border border-blue-100">
+                        <GraduationCap size={14} />
+                        {uaaCycle.uaaPhaseLabel}
+                    </div>
                     <h1 className="text-2xl sm:text-3xl font-bold text-[var(--color-brand-900)]">
                         Hola, {firstName}
                     </h1>
@@ -73,7 +86,14 @@ export default function DashboardPage() {
                         Aquí tienes el resumen real de tu progreso académico y próximos objetivos.
                     </p>
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap gap-3">
+                    <Link
+                        href="/dashboard/psychometrics"
+                        className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors inline-flex items-center gap-2"
+                    >
+                        <ClipboardCheck size={16} className="text-indigo-600" />
+                        Psicometría ({psychometricCount}/4)
+                    </Link>
                     <Link
                         href="/dashboard/exani"
                         className="px-4 py-2.5 rounded-xl bg-[var(--color-brand-600)] text-white text-sm font-semibold hover:bg-[var(--color-brand-500)] transition-colors inline-flex items-center gap-2"
@@ -82,6 +102,50 @@ export default function DashboardPage() {
                     </Link>
                 </div>
             </div>
+
+            {/* Real XP & Level Banner */}
+            {gamification && (
+                <div className="surface-card p-5 rounded-2xl border border-amber-200/70 bg-gradient-to-r from-amber-50/60 via-white to-blue-50/50">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center flex-shrink-0">
+                                <Trophy size={24} />
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-xs font-extrabold uppercase tracking-wider text-amber-700 bg-amber-100 px-2.5 py-0.5 rounded-full">
+                                        Nivel {gamification.level}
+                                    </span>
+                                    <h2 className="font-bold text-slate-900">{gamification.levelName}</h2>
+                                </div>
+                                <p className="text-xs text-slate-600 mt-1">
+                                    <strong>{gamification.totalXp} XP reales</strong> acumulados ·{" "}
+                                    <strong>{gamification.unlockedCount}/10</strong> insignias desbloqueadas
+                                    {gamification.nextLevelXp !== null
+                                        ? ` · Siguiente nivel a los ${gamification.nextLevelXp} XP`
+                                        : " · Nivel máximo alcanzado"}
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4 md:w-72">
+                            <div className="flex-1">
+                                <div className="h-2.5 bg-slate-200 rounded-full overflow-hidden">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-amber-500 to-blue-600 rounded-full transition-all"
+                                        style={{ width: `${gamification.progressToNextPct}%` }}
+                                    />
+                                </div>
+                            </div>
+                            <Link
+                                href="/dashboard/progress"
+                                className="text-xs font-bold text-[var(--color-brand-600)] hover:underline whitespace-nowrap"
+                            >
+                                Ver logros →
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
@@ -209,6 +273,13 @@ export default function DashboardPage() {
                                     icon: Brain,
                                 },
                                 {
+                                    title: "Batería Psicométrica Validada",
+                                    time: "8 min",
+                                    type: `${psychometricCount}/4 pruebas`,
+                                    href: "/dashboard/psychometrics",
+                                    icon: ClipboardCheck,
+                                },
+                                {
                                     title: "Plan de Estudio + Pomodoro",
                                     time: "25 min",
                                     type: `${progress?.tasksCompleted ?? 0}/${progress?.tasksTotal ?? 0} metas`,
@@ -254,3 +325,4 @@ export default function DashboardPage() {
         </div>
     );
 }
+

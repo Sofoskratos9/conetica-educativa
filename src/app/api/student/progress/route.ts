@@ -54,7 +54,32 @@ const WellnessActionSchema = z.object({
     action: z.literal('complete_wellness'),
     strategyId: z.string().min(1).max(80),
     strategyTitle: z.string().max(140).optional(),
+    durationMinutes: z.number().int().min(1).max(120).optional(),
     completed: z.boolean().optional(),
+});
+
+const PsychometricActionSchema = z.object({
+    action: z.literal('save_psychometric'),
+    testId: z.enum([
+        'habitos_estudio_edaom',
+        'estilos_aprendizaje_vak',
+        'orientacion_vocacional_chaside',
+        'inteligencia_emocional_baron',
+    ]),
+    testName: z.string().min(2).max(160),
+    globalPercentage: z.number().min(0).max(100),
+    topDimension: z.string().min(1).max(120),
+    recommendation: z.string().max(500),
+    dimensions: z.array(
+        z.object({
+            dimension: z.string().max(80),
+            label: z.string().max(120),
+            percentage: z.number().min(0).max(100),
+            level: z.enum(['alto', 'medio', 'bajo']),
+            interpretation: z.string().max(500),
+        })
+    ),
+    durationMinutes: z.number().int().min(1).max(60).optional(),
 });
 
 const ProgressPostSchema = z.discriminatedUnion('action', [
@@ -64,6 +89,7 @@ const ProgressPostSchema = z.discriminatedUnion('action', [
     VocationalActionSchema,
     PomodoroActionSchema,
     WellnessActionSchema,
+    PsychometricActionSchema,
 ]);
 
 export async function GET(request: NextRequest) {
@@ -247,21 +273,22 @@ export async function POST(request: NextRequest) {
                 const cleanTitle = parsed.strategyTitle
                     ? sanitizeInput(parsed.strategyTitle).slice(0, 140)
                     : cleanId;
+                const duration = parsed.durationMinutes ?? 5;
                 const markCompleted = parsed.completed !== false;
 
                 if (markCompleted) {
                     await pool.query(
                         `INSERT INTO user_progress (user_id, module_id, lesson_id, completed, score, time_spent_minutes, payload, completed_at)
-                         VALUES ($1, 'wellness', $2, true, 100, 5, $3::jsonb, NOW())
+                         VALUES ($1, 'wellness', $2, true, 100, $3, $4::jsonb, NOW())
                          ON CONFLICT (user_id, module_id, lesson_id)
-                         DO UPDATE SET completed = true, payload = EXCLUDED.payload, completed_at = NOW(), updated_at = NOW()`,
-                        [session.user.id, cleanId, JSON.stringify({ title: cleanTitle })]
+                         DO UPDATE SET completed = true, time_spent_minutes = user_progress.time_spent_minutes + EXCLUDED.time_spent_minutes, payload = EXCLUDED.payload, completed_at = NOW(), updated_at = NOW()`,
+                        [session.user.id, cleanId, duration, JSON.stringify({ title: cleanTitle })]
                     );
 
                     await pool.query(
                         `INSERT INTO study_sessions (user_id, module_id, duration_minutes, session_type, meta)
-                         VALUES ($1, 'wellness', 5, 'wellness', $2::jsonb)`,
-                        [session.user.id, JSON.stringify({ strategyId: cleanId, title: cleanTitle })]
+                         VALUES ($1, 'wellness', $2, 'wellness', $3::jsonb)`,
+                        [session.user.id, duration, JSON.stringify({ strategyId: cleanId, title: cleanTitle })]
                     );
 
                     await logActivityEvent({
@@ -276,6 +303,59 @@ export async function POST(request: NextRequest) {
                         [session.user.id, cleanId]
                     );
                 }
+            } else if (parsed.action === 'save_psychometric') {
+                const duration = parsed.durationMinutes ?? 6;
+                const payload = {
+                    testId: parsed.testId,
+                    testName: sanitizeInput(parsed.testName),
+                    completedAt: new Date().toISOString(),
+                    globalPercentage: Math.round(parsed.globalPercentage),
+                    topDimension: sanitizeInput(parsed.topDimension),
+                    recommendation: sanitizeInput(parsed.recommendation),
+                    dimensions: parsed.dimensions,
+                };
+
+                await pool.query(
+                    `INSERT INTO user_progress (user_id, module_id, lesson_id, completed, score, time_spent_minutes, payload, completed_at)
+                     VALUES ($1, 'psychometric', $2, true, $3, $4, $5::jsonb, NOW())
+                     ON CONFLICT (user_id, module_id, lesson_id)
+                     DO UPDATE SET completed = true, score = EXCLUDED.score, payload = EXCLUDED.payload, completed_at = NOW(), updated_at = NOW()`,
+                    [
+                        session.user.id,
+                        parsed.testId,
+                        Math.round(parsed.globalPercentage),
+                        duration,
+                        JSON.stringify(payload),
+                    ]
+                );
+
+                await pool.query(
+                    `INSERT INTO study_sessions (user_id, module_id, duration_minutes, session_type, score, meta)
+                     VALUES ($1, 'psychometric', $2, 'assessment', $3, $4::jsonb)`,
+                    [
+                        session.user.id,
+                        duration,
+                        Math.round(parsed.globalPercentage),
+                        JSON.stringify({ testId: parsed.testId, topDimension: payload.topDimension }),
+                    ]
+                );
+
+                await Promise.all([
+                    logActivityEvent({
+                        userId: session.user.id,
+                        userName: session.user.name,
+                        eventType: 'psychometric_completed',
+                        action: `Completó evaluación psicométrica: ${payload.testName} (${payload.topDimension})`,
+                        metadata: { testId: parsed.testId, globalPercentage: payload.globalPercentage },
+                    }),
+                    createUserNotification({
+                        userId: session.user.id,
+                        title: `Resultados listos: ${payload.testName}`,
+                        message: `Tu dimensión principal fue ${payload.topDimension}. Consulta tus gráficas e interpretación en Psicometría.`,
+                        type: 'success',
+                        actionLink: '/dashboard/psychometrics',
+                    }),
+                ]);
             }
         }
 

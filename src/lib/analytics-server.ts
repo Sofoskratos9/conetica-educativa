@@ -49,6 +49,21 @@ export interface StudentProgressSnapshot {
         total: number;
         type: string;
     }[];
+    psychometricResults: {
+        testId: string;
+        testName: string;
+        completedAt: string;
+        globalPercentage: number;
+        topDimension: string;
+        recommendation: string;
+        dimensions: {
+            dimension: string;
+            label: string;
+            percentage: number;
+            level: 'alto' | 'medio' | 'bajo';
+            interpretation: string;
+        }[];
+    }[];
     recommendations: string[];
 }
 
@@ -103,6 +118,7 @@ export async function getStudentProgressSnapshot(userId: string): Promise<Studen
         ],
         academicAreas: [],
         performanceHistory: [],
+        psychometricResults: [],
         recommendations: [
             'Completa tu Diagnóstico Cognitivo-Académico inicial para obtener métricas y prioridades reales.',
             'Realiza una práctica en el Simulador EXANI-II para estimar tu puntaje CENEVAL.',
@@ -164,6 +180,17 @@ export async function getStudentProgressSnapshot(userId: string): Promise<Studen
     const vocationalRow = progressRes.rows.find((r) => r.module_id === 'vocational');
     const wellnessRows = progressRes.rows.filter((r) => r.module_id === 'wellness' && r.completed);
     const exaniProgressRows = progressRes.rows.filter((r) => r.module_id === 'exani');
+    const psychometricRows = progressRes.rows.filter((r) => r.module_id === 'psychometric' && r.payload);
+
+    const psychometricResults: StudentProgressSnapshot['psychometricResults'] = psychometricRows.map((row) => ({
+        testId: String(row.payload?.testId || row.lesson_id),
+        testName: String(row.payload?.testName || row.lesson_id),
+        completedAt: String(row.payload?.completedAt || new Date(row.updated_at).toISOString()),
+        globalPercentage: Number(row.payload?.globalPercentage ?? row.score ?? 0),
+        topDimension: String(row.payload?.topDimension || 'General'),
+        recommendation: String(row.payload?.recommendation || ''),
+        dimensions: Array.isArray(row.payload?.dimensions) ? row.payload.dimensions : [],
+    }));
 
     const diagnostic = diagnosticRow?.payload
         ? {
@@ -352,6 +379,16 @@ export async function getStudentProgressSnapshot(userId: string): Promise<Studen
             type: 'vocacional',
         });
     }
+    psychometricRows.forEach((row) => {
+        performanceHistory.push({
+            id: row.id,
+            date: String(row.payload?.completedAt || row.updated_at).slice(0, 10),
+            module: String(row.payload?.testName || row.lesson_id),
+            score: Math.round(Number(row.payload?.globalPercentage ?? row.score ?? 0)),
+            total: 100,
+            type: 'psicometría',
+        });
+    });
     performanceHistory.sort((a, b) => (a.date < b.date ? 1 : -1));
 
     // Real recommendations based on actual user state
@@ -410,6 +447,7 @@ export async function getStudentProgressSnapshot(userId: string): Promise<Studen
         monthlyActivity,
         academicAreas,
         performanceHistory,
+        psychometricResults,
         recommendations,
     };
 }

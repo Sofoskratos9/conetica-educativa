@@ -31,6 +31,11 @@ function buildParentInsights(progress: StudentProgressSnapshot) {
             `Test Vocacional RIASEC completado (perfil ${progress.vocational.topCodes.join('-')})`
         );
     }
+    if (progress.psychometricResults && progress.psychometricResults.length > 0) {
+        recentAchievements.push(
+            `${progress.psychometricResults.length} evaluación(es) psicométrica(s) completada(s)`
+        );
+    }
     if (progress.tasksCompleted > 0) {
         recentAchievements.push(
             `${progress.tasksCompleted} de ${progress.tasksTotal} metas de estudio completadas`

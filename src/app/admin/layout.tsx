@@ -13,6 +13,8 @@ import {
     X,
     ExternalLink,
     ShieldCheck,
+    Users,
+    GraduationCap,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { clsx } from "clsx";
@@ -37,10 +39,12 @@ export default function AdminLayout({
 
     const navigation = [
         { name: "Analíticas", href: "/admin/analytics", icon: BarChart3 },
+        { name: "Usuarios y Permisos", href: "/admin/users", icon: Users },
+        { name: "Banco EXANI-II", href: "/admin/questions", icon: GraduationCap },
         { name: "Gestión de Citas", href: "/admin/appointments", icon: Calendar },
-        { name: "Vocacional RIASEC", href: "/admin/vocational", icon: Compass },
+        { name: "Psicometría y RIASEC", href: "/admin/vocational", icon: Compass },
         { name: "Gestión de Blog", href: "/admin/blog", icon: FileText },
-        { name: "Automatizaciones", href: "/admin/automations", icon: Activity },
+        { name: "Actividad y Logs", href: "/admin/automations", icon: Activity },
     ];
 
     const handleLogout = async () => {
