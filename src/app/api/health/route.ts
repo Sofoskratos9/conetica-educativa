@@ -21,10 +21,12 @@ export async function GET() {
     const sessionSecretConfigured = hasSessionSecretEnv();
 
     if (mode === 'postgres') {
+        let stage: 'connect' | 'schema' = 'connect';
         try {
-            await ensurePostgresSchema();
             const pool = getPgPool();
             await pool?.query('SELECT 1');
+            stage = 'schema';
+            await ensurePostgresSchema();
             return NextResponse.json({
                 status: 'ok',
                 database: 'postgres',
@@ -33,7 +35,10 @@ export async function GET() {
                 adminConfigured,
                 sessionSecretConfigured,
             });
-        } catch {
+        } catch (err: any) {
+            const code = typeof err?.code === 'string' ? err.code : undefined;
+            const rawMsg = typeof err?.message === 'string' ? err.message : '';
+            const safeDetail = rawMsg.replace(/postgres(?:ql)?:\/\/\S+/gi, '[redacted]').slice(0, 120);
             return NextResponse.json(
                 {
                     status: 'error',
@@ -42,6 +47,9 @@ export async function GET() {
                     demoMode: false,
                     adminConfigured,
                     sessionSecretConfigured,
+                    stage,
+                    code,
+                    detail: safeDetail || undefined,
                     error: 'Error conectando con la base de datos.',
                 },
                 { status: 500 }

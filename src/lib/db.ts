@@ -7,28 +7,42 @@ export const PRIMARY_ADMIN_EMAIL = (
     process.env.ADMIN_EMAIL || 'miguel.neftali95@gmail.com'
 ).toLowerCase().trim();
 
+function normalizePostgresUrl(val: string | undefined): string {
+    if (!val) return '';
+    let cleaned = val.trim();
+    if (cleaned.startsWith('psql ')) {
+        cleaned = cleaned.slice(5).trim();
+    }
+    if (
+        (cleaned.startsWith("'") && cleaned.endsWith("'")) ||
+        (cleaned.startsWith('"') && cleaned.endsWith('"'))
+    ) {
+        cleaned = cleaned.slice(1, -1).trim();
+    }
+    return cleaned;
+}
+
 function isValidPostgresUrl(val: string | undefined): val is string {
-    if (!val) return false;
-    const trimmed = val.trim();
-    if (!trimmed || trimmed.includes('REPLACE_WITH') || trimmed.includes('dummy')) {
+    const cleaned = normalizePostgresUrl(val);
+    if (!cleaned || cleaned.includes('REPLACE_WITH') || cleaned.includes('dummy')) {
         return false;
     }
-    return trimmed.startsWith('postgres://') || trimmed.startsWith('postgresql://');
+    return cleaned.startsWith('postgres://') || cleaned.startsWith('postgresql://');
 }
 
 export function getPostgresConnectionString(): string {
     const directCandidates = [
         process.env.DATABASE_URL,
         process.env.POSTGRES_URL,
+        process.env.POSTGRES_PRISMA_URL,
         process.env.DATABASE_URL_UNPOOLED,
         process.env.POSTGRES_URL_NON_POOLING,
-        process.env.POSTGRES_PRISMA_URL,
         process.env.NEON_DATABASE_URL,
     ];
 
     for (const candidate of directCandidates) {
         if (isValidPostgresUrl(candidate)) {
-            return candidate.trim();
+            return normalizePostgresUrl(candidate);
         }
     }
 
@@ -41,7 +55,7 @@ export function getPostgresConnectionString(): string {
                 key.endsWith('_POSTGRES_URL_NON_POOLING')) &&
             isValidPostgresUrl(value)
         ) {
-            return value.trim();
+            return normalizePostgresUrl(value);
         }
     }
 
@@ -68,9 +82,22 @@ export function getPgPool(): Pool | null {
             connectionString.includes('localhost') ||
             connectionString.includes('127.0.0.1');
 
+        // Strip channel_binding=require which can fail over pooled connections in node-postgres
+        let safeConnString = connectionString;
+        try {
+            const parsedUrl = new URL(connectionString);
+            if (parsedUrl.searchParams.has('channel_binding')) {
+                parsedUrl.searchParams.delete('channel_binding');
+                safeConnString = parsedUrl.toString();
+            }
+        } catch {
+            // Keep original string if URL parsing fails
+        }
+
         globalForPg.__coneticaPgPool = new Pool({
-            connectionString,
+            connectionString: safeConnString,
             max: 5,
+            connectionTimeoutMillis: 8000,
             ssl: isLocal ? false : { rejectUnauthorized: false },
         });
     }
@@ -85,12 +112,6 @@ export async function ensurePostgresSchema(): Promise<void> {
     if (!globalForPg.__coneticaPgSchemaReady) {
         globalForPg.__coneticaPgSchemaReady = (async () => {
             await pool.query(`
-                DO $$ BEGIN
-                    CREATE EXTENSION IF NOT EXISTS pgcrypto;
-                EXCEPTION WHEN insufficient_privilege THEN
-                    NULL;
-                END $$;
-
                 CREATE TABLE IF NOT EXISTS users (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     email TEXT UNIQUE NOT NULL,
