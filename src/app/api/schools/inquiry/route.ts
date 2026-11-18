@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { checkRateLimit, getClientIp, sanitizeInput } from '@/lib/security/sanitization';
-import { ensurePostgresSchema, getDatabaseMode, getPgPool } from '@/lib/db';
+import { ensurePostgresSchema, getDatabaseMode, getPgPool, logActivityEvent } from '@/lib/db';
 import { getSupabaseAdmin } from '@/lib/supabase';
 
 const InquirySchema = z.object({
@@ -54,6 +54,12 @@ export async function POST(request: NextRequest) {
                     sanitized.interest,
                 ]
             );
+            await logActivityEvent({
+                userName: sanitized.name,
+                eventType: 'school_inquiry',
+                action: `Nueva solicitud B2B de ${sanitized.school} (${sanitized.interest})`,
+                metadata: { referenceId, email: sanitized.email },
+            });
         } else if (mode === 'supabase') {
             const supabase = getSupabaseAdmin();
             await supabase.from('schools_inquiries').insert({

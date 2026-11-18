@@ -19,13 +19,15 @@ export default function AdminAppointmentsPage() {
     const [filter, setFilter] = useState<string>("all");
     const [loading, setLoading] = useState<boolean>(true);
     const [updatingId, setUpdatingId] = useState<string | null>(null);
+    const [errorMessage, setErrorMessage] = useState<string>("");
 
     const loadAppointments = async () => {
         setLoading(true);
+        setErrorMessage("");
         try {
             const res = await fetch("/api/appointments");
+            const data = await res.json().catch(() => ({}));
             if (res.ok) {
-                const data = await res.json();
                 const list: AppointmentItem[] = (data.appointments || []).map((a: any) => ({
                     id: String(a.id),
                     student: a.studentName || "Estudiante",
@@ -35,7 +37,11 @@ export default function AdminAppointmentsPage() {
                     status: a.status === "completed" ? "confirmed" : a.status,
                 }));
                 setAppointments(list);
+            } else {
+                setErrorMessage(data.error || "No se pudieron cargar las citas.");
             }
+        } catch {
+            setErrorMessage("Error de conexión al cargar las citas.");
         } finally {
             setLoading(false);
         }
@@ -47,15 +53,25 @@ export default function AdminAppointmentsPage() {
 
     const updateStatus = async (id: string, status: AppointmentStatus) => {
         setUpdatingId(id);
+        setErrorMessage("");
+        const prevList = appointments;
         setAppointments((prev) =>
             prev.map((app) => (app.id === id ? { ...app, status } : app))
         );
         try {
-            await fetch("/api/appointments", {
+            const res = await fetch("/api/appointments", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ id, status }),
             });
+            if (!res.ok) {
+                const data = await res.json().catch(() => ({}));
+                setAppointments(prevList);
+                setErrorMessage(data.error || "No se pudo actualizar el estado de la cita.");
+            }
+        } catch {
+            setAppointments(prevList);
+            setErrorMessage("Error de conexión al actualizar la cita.");
         } finally {
             setUpdatingId(null);
         }
@@ -94,6 +110,12 @@ export default function AdminAppointmentsPage() {
                     </select>
                 </div>
             </div>
+
+            {errorMessage && (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                    {errorMessage}
+                </div>
+            )}
 
             <div className="surface-card overflow-hidden">
                 <div className="overflow-x-auto">

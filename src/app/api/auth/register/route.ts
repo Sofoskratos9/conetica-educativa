@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { registerUserAccount } from '@/lib/auth-server';
 import { createSessionToken, SESSION_COOKIE_NAME } from '@/lib/session';
 import { checkRateLimit, getClientIp, sanitizeInput } from '@/lib/security/sanitization';
+import { createUserNotification, logActivityEvent } from '@/lib/db';
 
 const RegisterSchema = z.object({
     name: z.string().min(2, 'Nombre requerido').max(120),
@@ -38,6 +39,28 @@ export async function POST(request: NextRequest) {
                 { status: 409 }
             );
         }
+
+        await Promise.all([
+            logActivityEvent({
+                userId: result.user.id,
+                userName: result.user.name,
+                eventType: 'user_registered',
+                action: `Se registró nueva cuenta (${result.user.role})`,
+            }),
+            createUserNotification({
+                userId: result.user.id,
+                title: 'Bienvenido a Conética Educativa',
+                message:
+                    result.user.role === 'parent'
+                        ? 'Vincula la cuenta de tu hijo(a) por correo para seguir su avance en tiempo real.'
+                        : 'Completa tu Diagnóstico Cognitivo-Académico inicial para personalizar tu ruta de estudio.',
+                type: 'info',
+                actionLink:
+                    result.user.role === 'parent'
+                        ? '/parent/dashboard'
+                        : '/dashboard/diagnostic',
+            }),
+        ]);
 
         const token = await createSessionToken(result.user);
         const response = NextResponse.json({ user: result.user }, { status: 201 });

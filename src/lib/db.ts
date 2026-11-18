@@ -219,6 +219,79 @@ export async function ensurePostgresSchema(): Promise<void> {
                     error TEXT,
                     created_at TIMESTAMPTZ DEFAULT NOW()
                 );
+
+                CREATE TABLE IF NOT EXISTS study_tasks (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    title TEXT NOT NULL,
+                    area TEXT NOT NULL,
+                    duration_min INTEGER NOT NULL DEFAULT 25,
+                    day TEXT NOT NULL DEFAULT 'Hoy',
+                    completed BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_study_tasks_user ON study_tasks(user_id);
+
+                CREATE TABLE IF NOT EXISTS study_sessions (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    module_id TEXT NOT NULL,
+                    duration_minutes INTEGER NOT NULL DEFAULT 0,
+                    session_type TEXT NOT NULL DEFAULT 'practice',
+                    score DECIMAL(5, 2),
+                    meta JSONB,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_study_sessions_user_created ON study_sessions(user_id, created_at DESC);
+
+                CREATE TABLE IF NOT EXISTS notifications (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                    title TEXT NOT NULL,
+                    message TEXT NOT NULL,
+                    type TEXT NOT NULL DEFAULT 'info',
+                    action_link TEXT,
+                    read BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+
+                CREATE TABLE IF NOT EXISTS activity_logs (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+                    user_name TEXT,
+                    event_type TEXT NOT NULL,
+                    action TEXT NOT NULL,
+                    status TEXT NOT NULL DEFAULT 'success',
+                    metadata JSONB,
+                    created_at TIMESTAMPTZ DEFAULT NOW()
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_activity_logs_created ON activity_logs(created_at DESC);
+
+                CREATE TABLE IF NOT EXISTS blog_posts (
+                    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+                    slug TEXT UNIQUE NOT NULL,
+                    title TEXT NOT NULL,
+                    excerpt TEXT NOT NULL,
+                    content TEXT NOT NULL,
+                    category TEXT NOT NULL,
+                    author TEXT NOT NULL DEFAULT 'Equipo Conética',
+                    read_time TEXT NOT NULL DEFAULT '5 min',
+                    tags TEXT[] NOT NULL DEFAULT '{}',
+                    featured BOOLEAN NOT NULL DEFAULT FALSE,
+                    published_at TIMESTAMPTZ DEFAULT NOW(),
+                    created_at TIMESTAMPTZ DEFAULT NOW(),
+                    updated_at TIMESTAMPTZ DEFAULT NOW()
+                );
+
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT;
+                ALTER TABLE users ADD COLUMN IF NOT EXISTS weekly_reminders BOOLEAN DEFAULT TRUE;
+                ALTER TABLE user_progress ADD COLUMN IF NOT EXISTS payload JSONB;
             `);
         })().catch((err) => {
             globalForPg.__coneticaPgSchemaReady = undefined;
@@ -228,3 +301,62 @@ export async function ensurePostgresSchema(): Promise<void> {
 
     await globalForPg.__coneticaPgSchemaReady;
 }
+
+export async function logActivityEvent(params: {
+    userId?: string | null;
+    userName?: string | null;
+    eventType: string;
+    action: string;
+    status?: 'success' | 'failed';
+    metadata?: Record<string, unknown>;
+}): Promise<void> {
+    if (getDatabaseMode() !== 'postgres') return;
+    try {
+        await ensurePostgresSchema();
+        const pool = getPgPool();
+        if (!pool) return;
+        await pool.query(
+            `INSERT INTO activity_logs (user_id, user_name, event_type, action, status, metadata)
+             VALUES ($1, $2, $3, $4, $5, $6::jsonb)`,
+            [
+                params.userId || null,
+                params.userName || null,
+                params.eventType,
+                params.action,
+                params.status || 'success',
+                params.metadata ? JSON.stringify(params.metadata) : null,
+            ]
+        );
+    } catch {
+        // Non-fatal logging failure
+    }
+}
+
+export async function createUserNotification(params: {
+    userId: string;
+    title: string;
+    message: string;
+    type?: 'info' | 'success' | 'warning' | 'premium';
+    actionLink?: string;
+}): Promise<void> {
+    if (getDatabaseMode() !== 'postgres') return;
+    try {
+        await ensurePostgresSchema();
+        const pool = getPgPool();
+        if (!pool) return;
+        await pool.query(
+            `INSERT INTO notifications (user_id, title, message, type, action_link)
+             VALUES ($1, $2, $3, $4, $5)`,
+            [
+                params.userId,
+                params.title,
+                params.message,
+                params.type || 'info',
+                params.actionLink || null,
+            ]
+        );
+    } catch {
+        // Non-fatal notification failure
+    }
+}
+

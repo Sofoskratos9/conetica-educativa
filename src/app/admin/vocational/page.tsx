@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Search, Eye, FileText, X } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { Search, Eye, FileText, X, RefreshCw } from "lucide-react";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import {
@@ -15,7 +15,7 @@ import {
 } from "recharts";
 
 interface VocationalResultItem {
-    id: number;
+    id: string;
     student: string;
     email: string;
     date: string;
@@ -24,62 +24,36 @@ interface VocationalResultItem {
     scores: { area: string; value: number }[];
 }
 
-const MOCK_RESULTS: VocationalResultItem[] = [
-    {
-        id: 1,
-        student: "Miguel López",
-        email: "miguel@example.com",
-        date: "2025-12-05",
-        primary: "Investigador",
-        secondary: "Realista",
-        scores: [
-            { area: "Realista", value: 78 },
-            { area: "Investigador", value: 94 },
-            { area: "Artístico", value: 52 },
-            { area: "Social", value: 65 },
-            { area: "Emprendedor", value: 60 },
-            { area: "Convencional", value: 70 },
-        ],
-    },
-    {
-        id: 2,
-        student: "Ana García",
-        email: "ana@example.com",
-        date: "2025-12-04",
-        primary: "Artístico",
-        secondary: "Emprendedor",
-        scores: [
-            { area: "Realista", value: 45 },
-            { area: "Investigador", value: 68 },
-            { area: "Artístico", value: 92 },
-            { area: "Social", value: 74 },
-            { area: "Emprendedor", value: 85 },
-            { area: "Convencional", value: 48 },
-        ],
-    },
-    {
-        id: 3,
-        student: "Carlos Ruiz",
-        email: "carlos@example.com",
-        date: "2025-12-04",
-        primary: "Social",
-        secondary: "Investigador",
-        scores: [
-            { area: "Realista", value: 50 },
-            { area: "Investigador", value: 82 },
-            { area: "Artístico", value: 64 },
-            { area: "Social", value: 95 },
-            { area: "Emprendedor", value: 71 },
-            { area: "Convencional", value: 58 },
-        ],
-    },
-];
-
 export default function AdminVocationalPage() {
+    const [results, setResults] = useState<VocationalResultItem[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [errorMessage, setErrorMessage] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedResult, setSelectedResult] = useState<VocationalResultItem | null>(null);
 
-    const filteredResults = MOCK_RESULTS.filter(
+    const loadResults = useCallback(async () => {
+        setLoading(true);
+        setErrorMessage("");
+        try {
+            const res = await fetch("/api/admin/overview");
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                setErrorMessage(data.error || "No se pudieron cargar los resultados.");
+                return;
+            }
+            setResults(data.vocationalResults || []);
+        } catch {
+            setErrorMessage("Error de conexión al consultar resultados RIASEC.");
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        loadResults();
+    }, [loadResults]);
+
+    const filteredResults = results.filter(
         (r) =>
             r.student.toLowerCase().includes(searchTerm.toLowerCase()) ||
             r.email.toLowerCase().includes(searchTerm.toLowerCase())
@@ -106,18 +80,29 @@ export default function AdminVocationalPage() {
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-slate-900">Resultados Vocacionales</h1>
-                    <p className="text-sm text-slate-500">Administración de perfiles RIASEC de estudiantes.</p>
+                    <p className="text-sm text-slate-500">Administración de perfiles RIASEC reales de estudiantes.</p>
                 </div>
-                <Button variant="outline" onClick={handleExportCSV}>
-                    <FileText size={18} className="mr-2" /> Exportar CSV
-                </Button>
+                <div className="flex gap-2">
+                    <Button variant="outline" onClick={loadResults} disabled={loading}>
+                        <RefreshCw size={16} className={`mr-2 ${loading ? "animate-spin" : ""}`} /> Actualizar
+                    </Button>
+                    <Button variant="outline" onClick={handleExportCSV} disabled={filteredResults.length === 0}>
+                        <FileText size={18} className="mr-2" /> Exportar CSV
+                    </Button>
+                </div>
             </div>
+
+            {errorMessage && (
+                <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm font-medium">
+                    {errorMessage}
+                </div>
+            )}
 
             <div className="surface-card overflow-hidden">
                 <div className="p-4 border-b border-slate-200 bg-slate-50">
                     <div className="max-w-md">
                         <Input
-                            placeholder="Buscar estudiante..."
+                            placeholder="Buscar estudiante por nombre o correo..."
                             icon={<Search size={18} />}
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
@@ -138,39 +123,49 @@ export default function AdminVocationalPage() {
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
-                            {filteredResults.map((result) => (
-                                <tr key={result.id} className="hover:bg-slate-50 transition-colors">
-                                    <td className="px-6 py-4">
-                                        <div className="font-semibold text-slate-900">{result.student}</div>
-                                        <div className="text-slate-500 text-xs">{result.email}</div>
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-500">{result.date}</td>
-                                    <td className="px-6 py-4">
-                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
-                                            {result.primary}
-                                        </span>
-                                    </td>
-                                    <td className="px-6 py-4 text-slate-600">{result.secondary}</td>
-                                    <td className="px-6 py-4 text-right">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedResult(result)}
-                                            className="text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] font-semibold text-sm inline-flex items-center gap-1"
-                                        >
-                                            <Eye size={16} /> Ver Reporte
-                                        </button>
+                            {loading ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-10 text-center text-slate-500">
+                                        Cargando perfiles RIASEC...
                                     </td>
                                 </tr>
-                            ))}
+                            ) : filteredResults.length === 0 ? (
+                                <tr>
+                                    <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                                        {searchTerm
+                                            ? `No se encontraron resultados para "${searchTerm}"`
+                                            : "Ningún estudiante ha completado aún el Test Vocacional RIASEC."}
+                                    </td>
+                                </tr>
+                            ) : (
+                                filteredResults.map((result) => (
+                                    <tr key={result.id} className="hover:bg-slate-50 transition-colors">
+                                        <td className="px-6 py-4">
+                                            <div className="font-semibold text-slate-900">{result.student}</div>
+                                            <div className="text-slate-500 text-xs">{result.email}</div>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-500">{result.date}</td>
+                                        <td className="px-6 py-4">
+                                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
+                                                {result.primary}
+                                            </span>
+                                        </td>
+                                        <td className="px-6 py-4 text-slate-600">{result.secondary}</td>
+                                        <td className="px-6 py-4 text-right">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedResult(result)}
+                                                className="text-[var(--color-brand-600)] hover:text-[var(--color-brand-700)] font-semibold text-sm inline-flex items-center gap-1"
+                                            >
+                                                <Eye size={16} /> Ver Reporte
+                                            </button>
+                                        </td>
+                                    </tr>
+                                ))
+                            )}
                         </tbody>
                     </table>
                 </div>
-
-                {filteredResults.length === 0 && (
-                    <div className="p-12 text-center text-slate-500">
-                        No se encontraron resultados para &ldquo;{searchTerm}&rdquo;
-                    </div>
-                )}
             </div>
 
             {selectedResult && (

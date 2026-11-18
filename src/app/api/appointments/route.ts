@@ -5,9 +5,11 @@ import {
     verifySessionToken,
 } from '@/lib/session';
 import {
+    createUserNotification,
     ensurePostgresSchema,
     getDatabaseMode,
     getPgPool,
+    logActivityEvent,
 } from '@/lib/db';
 import { getSupabaseAdmin } from '@/lib/supabase';
 import { sanitizeInput } from '@/lib/security/sanitization';
@@ -244,6 +246,22 @@ export async function POST(request: NextRequest) {
                         cleanNotes || null,
                     ]
                 );
+                await Promise.all([
+                    logActivityEvent({
+                        userId: session.user.id,
+                        userName: session.user.name,
+                        eventType: 'appointment_booked',
+                        action: `Agendó "${cleanServiceName}" para ${cleanDate} a las ${cleanTime}`,
+                    }),
+                    createUserNotification({
+                        userId: session.user.id,
+                        title: 'Reserva registrada',
+                        message: `Tu sesión "${cleanServiceName}" para el ${cleanDate} a las ${cleanTime} está pendiente de confirmación.`,
+                        type: 'info',
+                        actionLink: '/dashboard/booking',
+                    }),
+                ]);
+
                 return NextResponse.json({
                     appointment: {
                         id: inserted.rows[0].id,
@@ -337,10 +355,45 @@ export async function PATCH(request: NextRequest) {
             await ensurePostgresSchema();
             const pool = getPgPool();
             if (pool) {
-                await pool.query(
-                    'UPDATE appointments SET status = $1, updated_at = NOW() WHERE id = $2',
+                const upd = await pool.query<{
+                    user_id: string;
+                    student_name: string | null;
+                    service_name: string;
+                    scheduled_date: string;
+                    scheduled_time: string;
+                }>(
+                    `UPDATE appointments
+                     SET status = $1, updated_at = NOW()
+                     WHERE id = $2
+                     RETURNING user_id, student_name, service_name, scheduled_date, scheduled_time`,
                     [status, id]
                 );
+                const row = upd.rows[0];
+                if (row) {
+                    const statusLabel =
+                        status === 'confirmed'
+                            ? 'confirmada'
+                            : status === 'cancelled'
+                              ? 'cancelada'
+                              : status === 'completed'
+                                ? 'completada'
+                                : 'pendiente';
+                    await Promise.all([
+                        logActivityEvent({
+                            userId: session.user.id,
+                            userName: session.user.name,
+                            eventType: 'appointment_status_changed',
+                            action: `Marcó cita de ${row.student_name || 'estudiante'} (${row.service_name}) como ${statusLabel}`,
+                        }),
+                        createUserNotification({
+                            userId: row.user_id,
+                            title: `Cita ${statusLabel}`,
+                            message: `Tu sesión "${row.service_name}" del ${String(row.scheduled_date).slice(0, 10)} a las ${String(row.scheduled_time).slice(0, 5)} fue marcada como ${statusLabel}.`,
+                            type: status === 'confirmed' ? 'success' : status === 'cancelled' ? 'warning' : 'info',
+                            actionLink: '/dashboard/booking',
+                        }),
+                    ]);
+                }
                 return NextResponse.json({ success: true, id, status });
             }
         }

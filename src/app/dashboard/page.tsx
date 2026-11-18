@@ -21,49 +21,43 @@ import {
     Tooltip,
     CartesianGrid,
 } from "recharts";
-import { getCurrentUser, type User } from "@/lib/auth-service";
-import { MOCK_STUDENT_METRICS } from "@/lib/metrics-data";
+import { getCurrentUser, fetchServerSession, type User } from "@/lib/auth-service";
+import type { StudentProgressSnapshot } from "@/lib/analytics-server";
 
 export default function DashboardPage() {
     const [user, setUser] = useState<User | null>(null);
-    const [exaniScore, setExaniScore] = useState<number>(1150);
-    const [diagnosticDone, setDiagnosticDone] = useState<boolean>(false);
-    const [vocationalDone, setVocationalDone] = useState<boolean>(false);
+    const [progress, setProgress] = useState<StudentProgressSnapshot | null>(null);
+    const [loading, setLoading] = useState(true);
     const [range, setRange] = useState<"7d" | "30d">("7d");
 
     useEffect(() => {
         setUser(getCurrentUser());
-        try {
-            const diag = localStorage.getItem("diagnostic_result");
-            if (diag) setDiagnosticDone(true);
-            const voc = localStorage.getItem("vocational_result");
-            if (voc) setVocationalDone(true);
-            const exani = localStorage.getItem("exani_last_score");
-            if (exani) {
-                const parsed = Number(exani);
-                if (!Number.isNaN(parsed) && parsed > 0) setExaniScore(parsed);
-            }
-        } catch {
-            // ignore storage errors
-        }
+        fetchServerSession().then((u) => {
+            if (u) setUser(u);
+        });
+
+        fetch("/api/student/progress")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (data?.progress) setProgress(data.progress);
+            })
+            .finally(() => setLoading(false));
     }, []);
 
     const chartData =
         range === "7d"
-            ? MOCK_STUDENT_METRICS.weeklyActivity.map((d) => ({
+            ? (progress?.weeklyActivity || []).map((d) => ({
                   name: d.day,
                   minutos: d.minutes,
                   tareas: d.tasksCompleted,
               }))
-            : [
-                  { name: "Sem 1", minutos: 240, tareas: 14 },
-                  { name: "Sem 2", minutos: 310, tareas: 19 },
-                  { name: "Sem 3", minutos: 355, tareas: 22 },
-                  { name: "Sem 4", minutos: 390, tareas: 26 },
-              ];
+            : progress?.monthlyActivity || [];
 
-    const completedCount =
-        3 + (diagnosticDone ? 1 : 0) + (vocationalDone ? 1 : 0);
+    const diagnosticDone = Boolean(progress?.diagnostic);
+    const vocationalDone = Boolean(progress?.vocational);
+    const completedCount = progress?.modulesCompleted ?? 0;
+    const totalModules = progress?.totalModules ?? 5;
+    const pctModules = Math.round((completedCount / totalModules) * 100);
 
     const firstName = user?.name?.split(" ")[0] || "Estudiante";
 
@@ -76,7 +70,7 @@ export default function DashboardPage() {
                         Hola, {firstName}
                     </h1>
                     <p className="text-[var(--color-text-muted)] mt-1">
-                        Aquí tienes el resumen de tu progreso académico y próximos objetivos.
+                        Aquí tienes el resumen real de tu progreso académico y próximos objetivos.
                     </p>
                 </div>
                 <div className="flex gap-3">
@@ -93,33 +87,43 @@ export default function DashboardPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
                 {[
                     {
-                        label: "Puntaje Global",
-                        value: exaniScore.toLocaleString("es-MX"),
-                        sub: "Escala CENEVAL estimada",
+                        label: "Puntaje EXANI-II",
+                        value: loading
+                            ? "—"
+                            : progress?.exaniLastScore !== null && progress?.exaniLastScore !== undefined
+                              ? progress.exaniLastScore.toLocaleString("es-MX")
+                              : "Sin intento",
+                        sub:
+                            progress?.exaniLastScore !== null && progress?.exaniLastScore !== undefined
+                                ? "Última escala CENEVAL estimada"
+                                : "Realiza un simulacro para calcularlo",
                         icon: TrendingUp,
                         color: "text-emerald-700",
                         bg: "bg-emerald-50",
                     },
                     {
-                        label: "Módulos Activos",
-                        value: `${Math.min(completedCount, 6)}/6`,
-                        sub: `${Math.round((Math.min(completedCount, 6) / 6) * 100)}% completado`,
+                        label: "Módulos Completados",
+                        value: loading ? "—" : `${completedCount}/${totalModules}`,
+                        sub: `${pctModules}% de tu ruta completada`,
                         icon: Brain,
                         color: "text-blue-700",
                         bg: "bg-blue-50",
                     },
                     {
                         label: "Tiempo de Estudio",
-                        value: `${MOCK_STUDENT_METRICS.totalStudyHours}h`,
-                        sub: "Acumulado mensual",
+                        value: loading ? "—" : `${progress?.totalStudyHours ?? 0}h`,
+                        sub: `${progress?.totalStudyMinutes ?? 0} minutos acumulados`,
                         icon: Clock,
                         color: "text-indigo-700",
                         bg: "bg-indigo-50",
                     },
                     {
-                        label: "Consistencia",
-                        value: "85%",
-                        sub: "Meta semanal en camino",
+                        label: "Consistencia (7 días)",
+                        value: loading ? "—" : `${progress?.consistencyScore ?? 0}%`,
+                        sub:
+                            (progress?.currentStreak ?? 0) > 0
+                                ? `Racha actual: ${progress?.currentStreak} día(s)`
+                                : "Completa una sesión hoy para iniciar racha",
                         icon: Target,
                         color: "text-amber-700",
                         bg: "bg-amber-50",
@@ -129,13 +133,13 @@ export default function DashboardPage() {
                         <div className="flex items-start justify-between">
                             <div>
                                 <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                                <h3 className="text-3xl font-extrabold text-slate-900 mt-1">{stat.value}</h3>
+                                <h3 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">{stat.value}</h3>
                             </div>
                             <div className={`p-2.5 rounded-xl ${stat.bg} ${stat.color}`}>
                                 <stat.icon size={20} />
                             </div>
                         </div>
-                        <div className="mt-4 text-xs font-semibold text-emerald-700">{stat.sub}</div>
+                        <div className="mt-4 text-xs font-semibold text-slate-600">{stat.sub}</div>
                     </div>
                 ))}
             </div>
@@ -146,7 +150,7 @@ export default function DashboardPage() {
                     <div className="flex items-center justify-between mb-6">
                         <div>
                             <h2 className="font-bold text-slate-900 text-lg">Actividad de Estudio</h2>
-                            <p className="text-xs text-slate-500">Minutos enfocados con metodología activa</p>
+                            <p className="text-xs text-slate-500">Minutos registrados en simulacros, evaluaciones y Pomodoro</p>
                         </div>
                         <select
                             value={range}
@@ -169,7 +173,7 @@ export default function DashboardPage() {
                                 </defs>
                                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                                 <XAxis dataKey="name" tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
+                                <YAxis allowDecimals={false} tick={{ fontSize: 12, fill: "#64748b" }} axisLine={false} tickLine={false} />
                                 <Tooltip
                                     contentStyle={{
                                         borderRadius: "12px",
@@ -207,7 +211,7 @@ export default function DashboardPage() {
                                 {
                                     title: "Plan de Estudio + Pomodoro",
                                     time: "25 min",
-                                    type: "Diario",
+                                    type: `${progress?.tasksCompleted ?? 0}/${progress?.tasksTotal ?? 0} metas`,
                                     href: "/dashboard/study-plan",
                                     icon: BookOpen,
                                 },

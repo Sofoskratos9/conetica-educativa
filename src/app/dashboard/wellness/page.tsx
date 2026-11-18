@@ -1,12 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { CATEGORIES, STRATEGIES } from "@/lib/wellness-data";
-import { ArrowRight, Lightbulb } from "lucide-react";
+import { ArrowRight, Lightbulb, CheckCircle2 } from "lucide-react";
 
 export default function WellnessDashboardPage() {
-    // Simple logic to pick a "daily recommendation" (could be randomized or rotated)
-    const dailyRec = STRATEGIES['clarity'][0];
+    const dailyRec = STRATEGIES["clarity"][0];
+    const [completedCount, setCompletedCount] = useState(0);
+
+    useEffect(() => {
+        fetch("/api/student/progress")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (Array.isArray(data?.progress?.wellnessCompletedIds)) {
+                    setCompletedCount(data.progress.wellnessCompletedIds.length);
+                }
+            })
+            .catch(() => {});
+    }, []);
 
     return (
         <div className="space-y-8">
@@ -17,16 +29,19 @@ export default function WellnessDashboardPage() {
                         Herramientas de autorregulación y estrategia para optimizar tu rendimiento.
                     </p>
                 </div>
+                <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-50 text-emerald-700 text-sm font-semibold">
+                    <CheckCircle2 size={16} />
+                    {completedCount} estrategia(s) practicada(s)
+                </div>
             </div>
 
-            {/* Daily Recommendation Widget */}
             <div className="bg-gradient-to-r from-[var(--color-brand-600)] to-[var(--color-brand-500)] rounded-2xl p-6 text-white shadow-lg">
                 <div className="flex items-start gap-4">
                     <div className="p-3 bg-white/20 rounded-xl backdrop-blur-sm">
                         <Lightbulb size={24} className="text-yellow-300" />
                     </div>
                     <div>
-                        <div className="text-sm font-medium text-blue-100 mb-1 uppercase tracking-wider">Estrategia del Día</div>
+                        <div className="text-sm font-medium text-blue-100 mb-1 uppercase tracking-wider">Estrategia Recomendada</div>
                         <h3 className="text-xl font-bold mb-2">{dailyRec.title}</h3>
                         <p className="text-blue-100 mb-4 max-w-2xl">
                             {dailyRec.description}
@@ -38,7 +53,6 @@ export default function WellnessDashboardPage() {
                 </div>
             </div>
 
-            {/* Categories Grid */}
             <div className="grid md:grid-cols-2 gap-6">
                 {CATEGORIES.map((cat) => (
                     <Link key={cat.id} href={`/dashboard/wellness/${cat.id}`}>

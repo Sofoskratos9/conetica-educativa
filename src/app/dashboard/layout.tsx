@@ -32,13 +32,22 @@ export default function DashboardLayout({
     const router = useRouter();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [user, setUser] = useState<User | null>(null);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         setUser(getCurrentUser());
         fetchServerSession().then((u) => {
             setUser(u);
         });
-    }, []);
+        fetch("/api/notifications")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (typeof data?.unreadCount === "number") {
+                    setUnreadCount(data.unreadCount);
+                }
+            })
+            .catch(() => {});
+    }, [pathname]);
 
     const navigation = [
         { name: "Resumen", href: "/dashboard", icon: LayoutDashboard },
@@ -205,7 +214,9 @@ export default function DashboardLayout({
                             aria-label="Notificaciones"
                         >
                             <Bell size={20} />
-                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white" />
+                            {unreadCount > 0 && (
+                                <span className="absolute top-1.5 right-1.5 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-white" />
+                            )}
                         </Link>
                         <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
                             <div className="text-right hidden sm:block">

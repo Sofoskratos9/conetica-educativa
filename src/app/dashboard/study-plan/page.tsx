@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
     BookOpen,
     CheckCircle2,
@@ -11,6 +11,8 @@ import {
     Plus,
     Timer,
     Flame,
+    Sparkles,
+    Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
@@ -23,51 +25,10 @@ interface StudyTask {
     completed: boolean;
 }
 
-const INITIAL_TASKS: StudyTask[] = [
-    {
-        id: "t1",
-        title: "Resolver 15 reactivos de proporcionalidad y álgebra lineal",
-        area: "Pensamiento Matemático",
-        durationMin: 40,
-        day: "Lunes",
-        completed: true,
-    },
-    {
-        id: "t2",
-        title: "Lectura crítica: identificar tesis y contraargumentos (2 textos)",
-        area: "Comprensión Lectora",
-        durationMin: 30,
-        day: "Martes",
-        completed: true,
-    },
-    {
-        id: "t3",
-        title: "Simulacro cronometrado de Pensamiento Analítico",
-        area: "Pensamiento Analítico",
-        durationMin: 45,
-        day: "Miércoles",
-        completed: false,
-    },
-    {
-        id: "t4",
-        title: "Repaso espaciado: acentuación diacrítica y concordancia",
-        area: "Estructura de la Lengua",
-        durationMin: 25,
-        day: "Jueves",
-        completed: false,
-    },
-    {
-        id: "t5",
-        title: "Revisión de errores de la semana y flashcards activas",
-        area: "Metacognición",
-        durationMin: 30,
-        day: "Viernes",
-        completed: false,
-    },
-];
-
 export default function StudyPlanPage() {
-    const [tasks, setTasks] = useState<StudyTask[]>(INITIAL_TASKS);
+    const [tasks, setTasks] = useState<StudyTask[]>([]);
+    const [loadingTasks, setLoadingTasks] = useState(true);
+    const [seeding, setSeeding] = useState(false);
     const [newTaskTitle, setNewTaskTitle] = useState("");
     const [newTaskArea, setNewTaskArea] = useState("Pensamiento Matemático");
 
@@ -75,24 +36,45 @@ export default function StudyPlanPage() {
     const [mode, setMode] = useState<"focus25" | "focus50" | "break5">("focus25");
     const [secondsLeft, setSecondsLeft] = useState(25 * 60);
     const [running, setRunning] = useState(false);
-    const [completedCycles, setCompletedCycles] = useState(2);
+    const [completedCycles, setCompletedCycles] = useState(0);
 
-    useEffect(() => {
+    const loadData = useCallback(async () => {
+        setLoadingTasks(true);
         try {
-            const saved = localStorage.getItem("study_plan_tasks");
-            if (saved) setTasks(JSON.parse(saved));
-        } catch {
-            // ignore
+            const [tasksRes, progRes] = await Promise.all([
+                fetch("/api/student/tasks"),
+                fetch("/api/student/progress"),
+            ]);
+            if (tasksRes.ok) {
+                const tData = await tasksRes.json().catch(() => ({}));
+                setTasks(tData.tasks || []);
+            }
+            if (progRes.ok) {
+                const pData = await progRes.json().catch(() => ({}));
+                if (typeof pData?.progress?.pomodoroCyclesToday === "number") {
+                    setCompletedCycles(pData.progress.pomodoroCyclesToday);
+                }
+            }
+        } finally {
+            setLoadingTasks(false);
         }
     }, []);
 
     useEffect(() => {
-        try {
-            localStorage.setItem("study_plan_tasks", JSON.stringify(tasks));
-        } catch {
-            // ignore
-        }
-    }, [tasks]);
+        loadData();
+    }, [loadData]);
+
+    const recordPomodoroCycle = useCallback(async (minutes: number) => {
+        setCompletedCycles((c) => c + 1);
+        await fetch("/api/student/progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                action: "log_pomodoro",
+                durationMinutes: minutes,
+            }),
+        }).catch(() => {});
+    }, []);
 
     useEffect(() => {
         if (!running) return;
@@ -100,14 +82,16 @@ export default function StudyPlanPage() {
             setSecondsLeft((prev) => {
                 if (prev <= 1) {
                     setRunning(false);
-                    if (mode !== "break5") setCompletedCycles((c) => c + 1);
+                    if (mode !== "break5") {
+                        void recordPomodoroCycle(mode === "focus25" ? 25 : 50);
+                    }
                     return 0;
                 }
                 return prev - 1;
             });
         }, 1000);
         return () => clearInterval(timer);
-    }, [running, mode]);
+    }, [running, mode, recordPomodoroCycle]);
 
     const switchMode = (nextMode: "focus25" | "focus50" | "break5") => {
         setRunning(false);
@@ -115,23 +99,68 @@ export default function StudyPlanPage() {
         setSecondsLeft(nextMode === "focus25" ? 25 * 60 : nextMode === "focus50" ? 50 * 60 : 5 * 60);
     };
 
-    const toggleTask = (id: string) => {
-        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: !t.completed } : t)));
+    const toggleTask = async (id: string) => {
+        const current = tasks.find((t) => t.id === id);
+        if (!current) return;
+        const nextCompleted = !current.completed;
+        setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: nextCompleted } : t)));
+        const res = await fetch("/api/student/tasks", {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ id, completed: nextCompleted }),
+        });
+        if (!res.ok) {
+            setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, completed: current.completed } : t)));
+        }
     };
 
-    const addTask = (e: React.FormEvent) => {
+    const deleteTask = async (id: string) => {
+        const prevList = tasks;
+        setTasks((prev) => prev.filter((t) => t.id !== id));
+        const res = await fetch(`/api/student/tasks?id=${encodeURIComponent(id)}`, {
+            method: "DELETE",
+        });
+        if (!res.ok) {
+            setTasks(prevList);
+        }
+    };
+
+    const addTask = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newTaskTitle.trim()) return;
-        const item: StudyTask = {
-            id: `t_${Date.now()}`,
-            title: newTaskTitle.trim(),
-            area: newTaskArea,
-            durationMin: 25,
-            day: "Hoy",
-            completed: false,
-        };
-        setTasks((prev) => [item, ...prev]);
+        const title = newTaskTitle.trim();
         setNewTaskTitle("");
+        const res = await fetch("/api/student/tasks", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                title,
+                area: newTaskArea,
+                durationMin: 25,
+                day: "Hoy",
+            }),
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.task) {
+            setTasks((prev) => [data.task, ...prev]);
+        }
+    };
+
+    const seedRecommendedPlan = async () => {
+        setSeeding(true);
+        try {
+            const res = await fetch("/api/student/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "seed_recommended" }),
+            });
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && Array.isArray(data.tasks)) {
+                setTasks(data.tasks);
+            }
+        } finally {
+            setSeeding(false);
+        }
     };
 
     const completedCount = tasks.filter((t) => t.completed).length;
@@ -148,12 +177,12 @@ export default function StudyPlanPage() {
                         <BookOpen className="text-[var(--color-brand-600)]" /> Plan de Estudio Personalizado
                     </h1>
                     <p className="text-slate-600 mt-1">
-                        Combina bloques de estudio espaciado con ciclos Pomodoro de enfoque profundo.
+                        Combina bloques de estudio espaciado con ciclos Pomodoro registrados en tu cuenta.
                     </p>
                 </div>
                 <div className="inline-flex items-center gap-2 bg-emerald-50 text-emerald-800 px-4 py-2 rounded-xl text-sm font-semibold">
                     <Flame size={18} className="text-emerald-600" />
-                    <span>{completedCycles} bloques completados hoy</span>
+                    <span>{completedCycles} bloque(s) completados hoy</span>
                 </div>
             </div>
 
@@ -174,7 +203,7 @@ export default function StudyPlanPage() {
                                     <button
                                         key={m.id}
                                         type="button"
-                                        onClick={() => switchMode(m.id as any)}
+                                        onClick={() => switchMode(m.id as "focus25" | "focus50" | "break5")}
                                         className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors ${
                                             mode === m.id
                                                 ? "bg-emerald-500 text-slate-950"
@@ -194,7 +223,7 @@ export default function StudyPlanPage() {
                             <p className="text-xs text-slate-300 mt-2">
                                 {mode === "break5"
                                     ? "Descansa la vista, hidrátate y estírate"
-                                    : "Silencia notificaciones y enfócate en una sola meta"}
+                                    : "Al terminar el bloque se sumará automáticamente a tus horas de estudio"}
                             </p>
                         </div>
 
@@ -272,40 +301,80 @@ export default function StudyPlanPage() {
                         </form>
 
                         <div className="space-y-3 pt-2">
-                            {tasks.map((task) => (
-                                <button
-                                    type="button"
-                                    key={task.id}
-                                    onClick={() => toggleTask(task.id)}
-                                    className={`w-full text-left p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
-                                        task.completed
-                                            ? "bg-slate-50 border-slate-200 opacity-75"
-                                            : "bg-white border-slate-200 hover:border-[var(--color-brand-300)]"
-                                    }`}
-                                >
-                                    {task.completed ? (
-                                        <CheckCircle2 size={20} className="text-emerald-600 mt-0.5 flex-shrink-0" />
-                                    ) : (
-                                        <Circle size={20} className="text-slate-300 mt-0.5 flex-shrink-0" />
-                                    )}
-                                    <div className="flex-1 min-w-0">
-                                        <div
-                                            className={`text-sm font-semibold ${
-                                                task.completed ? "line-through text-slate-500" : "text-slate-900"
-                                            }`}
+                            {loadingTasks ? (
+                                <div className="py-8 text-center text-sm text-slate-500">
+                                    Cargando tus metas de estudio...
+                                </div>
+                            ) : tasks.length === 0 ? (
+                                <div className="p-6 rounded-xl bg-slate-50 border border-slate-200 text-center space-y-3">
+                                    <p className="text-sm text-slate-600">
+                                        Aún no tienes metas registradas. Agrega una arriba o genera un plan sugerido basado en tu diagnóstico.
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={seedRecommendedPlan}
+                                        disabled={seeding}
+                                        className="gap-2"
+                                    >
+                                        <Sparkles size={15} />
+                                        {seeding ? "Generando plan..." : "Generar plan semanal sugerido"}
+                                    </Button>
+                                </div>
+                            ) : (
+                                tasks.map((task) => (
+                                    <div
+                                        key={task.id}
+                                        className={`p-4 rounded-xl border transition-all flex items-start gap-3.5 ${
+                                            task.completed
+                                                ? "bg-slate-50 border-slate-200 opacity-80"
+                                                : "bg-white border-slate-200 hover:border-[var(--color-brand-300)]"
+                                        }`}
+                                    >
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleTask(task.id)}
+                                            className="mt-0.5 flex-shrink-0 text-left"
+                                            aria-label={task.completed ? "Marcar como pendiente" : "Marcar como completada"}
                                         >
-                                            {task.title}
-                                        </div>
-                                        <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-500">
-                                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
-                                                {task.area}
-                                            </span>
-                                            <span>• {task.day}</span>
-                                            <span>• {task.durationMin} min</span>
-                                        </div>
+                                            {task.completed ? (
+                                                <CheckCircle2 size={20} className="text-emerald-600" />
+                                            ) : (
+                                                <Circle size={20} className="text-slate-300 hover:text-[var(--color-brand-500)]" />
+                                            )}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => toggleTask(task.id)}
+                                            className="flex-1 min-w-0 text-left"
+                                        >
+                                            <div
+                                                className={`text-sm font-semibold ${
+                                                    task.completed ? "line-through text-slate-500" : "text-slate-900"
+                                                }`}
+                                            >
+                                                {task.title}
+                                            </div>
+                                            <div className="flex flex-wrap gap-2 mt-1 text-xs text-slate-500">
+                                                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-medium">
+                                                    {task.area}
+                                                </span>
+                                                <span>• {task.day}</span>
+                                                <span>• {task.durationMin} min</span>
+                                            </div>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => deleteTask(task.id)}
+                                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                            aria-label="Eliminar tarea"
+                                        >
+                                            <Trash2 size={15} />
+                                        </button>
                                     </div>
-                                </button>
-                            ))}
+                                ))
+                            )}
                         </div>
                     </div>
                 </div>

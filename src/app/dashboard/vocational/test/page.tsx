@@ -30,30 +30,30 @@ export default function VocationalTestPage() {
     const finishTest = async (finalAnswers: Record<string, boolean>) => {
         setIsSubmitting(true);
 
-        // Calculate results
         const scores = calculateRiasecScore(finalAnswers, QUESTIONS);
         const topCodes = getTopCodes(scores);
         const suggestedCareers = getSuggestedCareers(topCodes);
+        const date = new Date().toISOString();
 
-        // Simulate saving to DB (localStorage for demo)
-        const resultData = {
-            date: new Date().toISOString(),
-            scores,
-            topCodes,
-            suggestedCareers
-        };
-
-        localStorage.setItem('vocational_result', JSON.stringify(resultData));
-
-        // Simulate network delay
-        setTimeout(() => {
-            router.push('/dashboard/vocational/results');
-        }, 1500);
+        try {
+            await fetch("/api/student/progress", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "save_vocational",
+                    scores,
+                    topCodes,
+                    suggestedCareers,
+                    date,
+                }),
+            });
+        } finally {
+            router.push("/dashboard/vocational/results");
+        }
     };
 
     return (
         <div className="max-w-2xl mx-auto py-12 px-4">
-            {/* Progress Bar */}
             <div className="mb-8">
                 <div className="flex justify-between text-sm font-medium text-gray-500 mb-2">
                     <span>Pregunta {currentStep + 1} de {QUESTIONS.length}</span>
@@ -69,7 +69,6 @@ export default function VocationalTestPage() {
                 </div>
             </div>
 
-            {/* Question Card */}
             <motion.div
                 key={currentStep}
                 initial={{ opacity: 0, x: 20 }}
@@ -83,12 +82,14 @@ export default function VocationalTestPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                     <button
+                        type="button"
                         onClick={() => handleAnswer(false)}
                         className="p-4 rounded-xl border-2 border-gray-100 hover:border-red-200 hover:bg-red-50 text-gray-600 font-medium transition-all"
                     >
                         No me interesa
                     </button>
                     <button
+                        type="button"
                         onClick={() => handleAnswer(true)}
                         className="p-4 rounded-xl border-2 border-[var(--color-brand-100)] bg-[var(--color-brand-50)] hover:bg-[var(--color-brand-100)] text-[var(--color-brand-700)] font-bold transition-all"
                     >
@@ -97,9 +98,9 @@ export default function VocationalTestPage() {
                 </div>
             </motion.div>
 
-            {/* Navigation (Back) */}
             <div className="mt-6 flex justify-start">
                 <button
+                    type="button"
                     onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
                     disabled={currentStep === 0}
                     className="text-gray-400 hover:text-gray-600 disabled:opacity-0 flex items-center gap-2"
@@ -108,12 +109,11 @@ export default function VocationalTestPage() {
                 </button>
             </div>
 
-            {/* Loading Overlay */}
             {isSubmitting && (
                 <div className="fixed inset-0 bg-white/80 backdrop-blur-sm z-50 flex flex-col items-center justify-center">
                     <div className="w-16 h-16 border-4 border-[var(--color-brand-200)] border-t-[var(--color-brand-600)] rounded-full animate-spin mb-4"></div>
-                    <h3 className="text-xl font-bold text-[var(--color-brand-900)]">Analizando tu perfil...</h3>
-                    <p className="text-gray-500">Buscando coincidencias científicas.</p>
+                    <h3 className="text-xl font-bold text-[var(--color-brand-900)]">Guardando tu perfil RIASEC...</h3>
+                    <p className="text-gray-500">Calculando coincidencias profesionales.</p>
                 </div>
             )}
         </div>

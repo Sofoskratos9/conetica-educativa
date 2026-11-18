@@ -22,12 +22,17 @@ export default function DashboardSettingsPage() {
             setUser(local);
             setDisplayName(local.name);
         }
-        fetchServerSession().then((u) => {
-            if (u) {
-                setUser(u);
-                setDisplayName(u.name);
-            }
-        });
+        fetch("/api/profile")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (data?.user) {
+                    setUser(data.user);
+                    setDisplayName(data.user.name || "");
+                    setPhone(data.user.phone || "");
+                    setWeeklyReminders(data.user.weeklyReminders !== false);
+                }
+            })
+            .catch(() => {});
     }, []);
 
     const handleSave = async (e: React.FormEvent) => {
@@ -39,7 +44,11 @@ export default function DashboardSettingsPage() {
             const res = await fetch("/api/profile", {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name: displayName }),
+                body: JSON.stringify({
+                    name: displayName,
+                    phone,
+                    weeklyReminders,
+                }),
             });
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {

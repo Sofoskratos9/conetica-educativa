@@ -26,6 +26,8 @@ export default function ExaniSimulatorPage() {
     const [selectedOption, setSelectedOption] = useState<number | null>(null);
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [finished, setFinished] = useState(false);
+    const [savedStatus, setSavedStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+    const [startedAt, setStartedAt] = useState<number>(() => Date.now());
 
     const questions = useMemo(
         () =>
@@ -41,6 +43,8 @@ export default function ExaniSimulatorPage() {
         setSelectedOption(null);
         setAnswers({});
         setFinished(false);
+        setSavedStatus("idle");
+        setStartedAt(Date.now());
     };
 
     const currentQ = questions[currentIndex];
@@ -51,19 +55,36 @@ export default function ExaniSimulatorPage() {
         setAnswers((prev) => ({ ...prev, [currentQ.id]: idx }));
     };
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (currentIndex < questions.length - 1) {
             setCurrentIndex((i) => i + 1);
             setSelectedOption(null);
         } else {
             const correctCount = questions.filter((q) => answers[q.id] === q.correctIndex).length;
+            const pct = Math.round((correctCount / questions.length) * 100);
             const cScore = Math.round(700 + (correctCount / questions.length) * 600);
-            try {
-                localStorage.setItem("exani_last_score", String(cScore));
-            } catch {
-                // ignore
-            }
+            const elapsedMinutes = Math.max(1, Math.round((Date.now() - startedAt) / 60000));
+
             setFinished(true);
+            setSavedStatus("saving");
+            try {
+                const res = await fetch("/api/student/progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "save_exani",
+                        area: selectedArea,
+                        correctCount,
+                        totalQuestions: questions.length,
+                        percentage: pct,
+                        cenevalScore: cScore,
+                        durationMinutes: elapsedMinutes,
+                    }),
+                });
+                setSavedStatus(res.ok ? "saved" : "error");
+            } catch {
+                setSavedStatus("error");
+            }
         }
     };
 
@@ -72,6 +93,8 @@ export default function ExaniSimulatorPage() {
         setSelectedOption(null);
         setAnswers({});
         setFinished(false);
+        setSavedStatus("idle");
+        setStartedAt(Date.now());
     };
 
     if (finished) {
@@ -106,7 +129,13 @@ export default function ExaniSimulatorPage() {
                         </div>
                     </div>
 
-                    <div className="pt-4">
+                    <p className="text-xs font-medium text-slate-500">
+                        {savedStatus === "saving" && "Guardando intento en tu historial..."}
+                        {savedStatus === "saved" && "Resultado guardado en tu historial y progreso."}
+                        {savedStatus === "error" && "No se pudo guardar en el servidor. Intenta nuevamente."}
+                    </p>
+
+                    <div className="pt-2">
                         <Button onClick={resetSimulator} className="gap-2">
                             <RotateCcw size={16} /> Practicar Nuevamente
                         </Button>
@@ -129,7 +158,6 @@ export default function ExaniSimulatorPage() {
                 </div>
             </div>
 
-            {/* Area filter */}
             <div className="flex flex-wrap gap-2">
                 {AREAS.map((area) => (
                     <button
@@ -147,7 +175,6 @@ export default function ExaniSimulatorPage() {
                 ))}
             </div>
 
-            {/* Question Card */}
             {currentQ && (
                 <div className="surface-card rounded-2xl p-7 space-y-6">
                     <div className="flex flex-wrap items-center justify-between gap-2 text-xs">

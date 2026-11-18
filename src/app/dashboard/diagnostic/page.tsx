@@ -30,17 +30,21 @@ export default function DiagnosticPage() {
     const [step, setStep] = useState(0);
     const [answers, setAnswers] = useState<Record<string, number>>({});
     const [result, setResult] = useState<DiagnosticResult | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
 
     useEffect(() => {
-        try {
-            const saved = localStorage.getItem("diagnostic_result");
-            if (saved) setResult(JSON.parse(saved));
-        } catch {
-            // ignore
-        }
+        fetch("/api/student/progress")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                if (data?.progress?.diagnostic) {
+                    setResult(data.progress.diagnostic);
+                }
+            })
+            .finally(() => setLoading(false));
     }, []);
 
-    const handleSelect = (questionId: string, scoreValue: number) => {
+    const handleSelect = async (questionId: string, scoreValue: number) => {
         const updated = { ...answers, [questionId]: scoreValue };
         setAnswers(updated);
 
@@ -75,28 +79,46 @@ export default function DiagnosticPage() {
             };
 
             setResult(finalResult);
+            setSaving(true);
             try {
-                localStorage.setItem("diagnostic_result", JSON.stringify(finalResult));
-            } catch {
-                // ignore
+                await fetch("/api/student/progress", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        action: "save_diagnostic",
+                        overall,
+                        scores,
+                        completedAt: finalResult.completedAt,
+                    }),
+                });
+            } finally {
+                setSaving(false);
             }
         }
     };
 
-    const resetDiagnostic = () => {
+    const resetDiagnostic = async () => {
         setResult(null);
         setAnswers({});
         setStep(0);
-        try {
-            localStorage.removeItem("diagnostic_result");
-        } catch {
-            // ignore
-        }
+        await fetch("/api/student/progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "reset_diagnostic" }),
+        }).catch(() => {});
     };
+
+    if (loading) {
+        return (
+            <div className="max-w-3xl mx-auto py-16 text-center text-sm text-slate-500">
+                Cargando tu estado diagnóstico...
+            </div>
+        );
+    }
 
     if (result) {
         const radarData = (Object.keys(result.scores) as DiagnosticArea[]).map((area) => ({
-            subject: DIAGNOSTIC_AREA_META[area].label.split(" ")[0] + (area === "self_regulation" ? "" : ""),
+            subject: DIAGNOSTIC_AREA_META[area].label.split(" ")[0],
             fullLabel: DIAGNOSTIC_AREA_META[area].label,
             puntaje: result.scores[area],
             fullMark: 100,
@@ -111,7 +133,7 @@ export default function DiagnosticPage() {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
                         <span className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full mb-2">
-                            <CheckCircle size={14} /> Evaluación Completada
+                            <CheckCircle size={14} /> {saving ? "Guardando en tu cuenta..." : "Evaluación Guardada"}
                         </span>
                         <h1 className="text-3xl font-bold text-[var(--color-brand-900)]">
                             Tu Diagnóstico Cognitivo-Académico
@@ -190,7 +212,7 @@ export default function DiagnosticPage() {
                             Refuerza {DIAGNOSTIC_AREA_META[priorityArea].label} en tu Plan de Estudio
                         </h3>
                         <p className="text-sm text-slate-200">
-                            Ya actualizamos tus recomendaciones para enfocarte en tu área de mayor impacto.
+                            Tu resultado ya quedó guardado en tu perfil y actualiza tus métricas en tiempo real.
                         </p>
                     </div>
                     <Link href="/dashboard/study-plan">
@@ -224,7 +246,6 @@ export default function DiagnosticPage() {
                 </div>
             </div>
 
-            {/* Progress */}
             <div>
                 <div className="flex justify-between text-xs font-semibold text-slate-500 mb-2">
                     <span>
@@ -241,7 +262,6 @@ export default function DiagnosticPage() {
                 </div>
             </div>
 
-            {/* Question Card */}
             <motion.div
                 key={question.id}
                 initial={{ opacity: 0, y: 8 }}

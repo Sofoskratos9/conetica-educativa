@@ -20,17 +20,29 @@ import {
 export default function VocationalResultsPage() {
     const router = useRouter();
     const [result, setResult] = useState<TestResult | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const stored = localStorage.getItem("vocational_result");
-        if (!stored) {
-            router.push("/dashboard/vocational");
-            return;
-        }
-        setResult(JSON.parse(stored));
+        fetch("/api/student/progress")
+            .then((r) => (r.ok ? r.json() : null))
+            .then((data) => {
+                const voc = data?.progress?.vocational;
+                if (!voc) {
+                    router.replace("/dashboard/vocational");
+                    return;
+                }
+                setResult(voc as TestResult);
+            })
+            .finally(() => setLoading(false));
     }, [router]);
 
-    if (!result) return null;
+    if (loading || !result) {
+        return (
+            <div className="max-w-4xl mx-auto py-16 text-center text-sm text-slate-500">
+                Cargando tu perfil vocacional RIASEC...
+            </div>
+        );
+    }
 
     const primaryCode = result.topCodes[0];
     const profile = RIASEC_DESCRIPTIONS[primaryCode];
@@ -44,7 +56,6 @@ export default function VocationalResultsPage() {
 
     return (
         <div className="space-y-8 pb-12 max-w-6xl mx-auto">
-            {/* Header */}
             <div className="surface-card p-8 rounded-2xl flex flex-col md:flex-row justify-between items-start gap-6">
                 <div>
                     <span className="inline-block px-3 py-1 rounded-full bg-[var(--color-brand-100)] text-[var(--color-brand-700)] text-xs font-bold uppercase tracking-wider mb-3">
@@ -74,7 +85,6 @@ export default function VocationalResultsPage() {
             </div>
 
             <div className="grid lg:grid-cols-3 gap-8">
-                {/* Radar + Breakdown */}
                 <div className="lg:col-span-1 surface-card p-6 rounded-2xl space-y-6">
                     <div>
                         <h2 className="font-bold text-slate-900 text-lg">Hexágono Holland (RIASEC)</h2>
@@ -127,7 +137,6 @@ export default function VocationalResultsPage() {
                     </div>
                 </div>
 
-                {/* Career Suggestions */}
                 <div className="lg:col-span-2 space-y-6">
                     <h2 className="text-xl font-bold text-[var(--color-brand-900)] flex items-center gap-2">
                         <Briefcase className="text-[var(--color-brand-500)]" /> Carreras Compatibles
@@ -164,7 +173,6 @@ export default function VocationalResultsPage() {
                         ))}
                     </div>
 
-                    {/* Next Steps */}
                     <div className="bg-white p-6 rounded-2xl border border-slate-200 space-y-4">
                         <h3 className="font-bold text-[var(--color-brand-900)] flex items-center gap-2">
                             <BookOpen className="text-[var(--color-brand-500)]" /> Próximos Pasos Recomendados
